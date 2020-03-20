@@ -1,0 +1,121 @@
+THE DRAFT BELOW WAS WRITTEN BEFORE EXPLORING THE CODE IN THE
+DOCUMENTATION FILES EXAMPLE.PY
+  SOMEHOW A NEW USER NEEDS TO LEARN HOW THE SUBROUTINES ARE CLUSTERED
+  TO BE ABLE TO FIND THE PARTICULAR SUBROUTINES NEEDED.
+THIS MIGHT BE ACCOMPLISHED BY A LISTING OF POSSIBLE COMMENTED OUT
+SUBROUTINES IN A TEMPLATE OR PERHAPS BY SOME OTHER SUBCATEGORIZATION
+IN THE DOCUMENTATION FILES OR DOCUMENTATION FILE HTML
+TODO
+=========================================================
+1 GitHub: Create user on GitHub
+     (a) Follow directions on GitHub available here ___________(TODO)
+  Local: Add local directions here
+
+2. The MyPyLARC python package will automatically load the larc linear algebra
+   recursive compression file. MyPyLARC contains tutorials to help you learn about
+   how use LARC.
+   You need to decide where you want mypylarc to
+   sit.  If you desire, create a new subdirectory and move location before going
+   to step 3 where you will use the git clone commmand to retrieve copy of mypylarc.
+   For example:
+      mkdir LARCstuff
+      cd LARCstuff
+
+3. Get a copy of mypylarc:
+ 	(a) git clone <from proper place>
+	GitHub directions _____________________ (TODO add these)
+        (b) Verify arrival of the cloned directory material via
+   	  (  i) "ls" to see that the desired cloned directory arrived
+	  ( ii) "cd" down into the mypylarc subdirectory
+        (c) Let the default Makefile inform co-communication among routines via
+	  (  i) run "make"
+                   ( If prompted for a password, then use git password) 
+	  ( ii) GitHub (TODO)
+
+
+4. After the make you will have access to both the doxygen documentation
+   DOCUMENTATION:  after the make has been done, a doxygen html documentation file
+	           has been added to the larc subdirectory so
+		   do a pwd of your current directory,
+		   append /larc/html/files.html to it,
+	           and load the result as a file into your browser to see
+		   the documention.
+
+5. To go to the Tutorial to run various python tutorials.
+   TUTORIAL: cd mypylarc/Tutorial.	   
+
+   Run the tutorial.py file in python for an Intro to LARC via
+	   (  i) "cd" down into the Tutorial subdirectory 
+	   ( ii) "ls" to see the available python scripts.
+	   (iii)  Execute the desired tutorial script using
+            	 python3 scriptname
+		 eg python3 tut1_larc_overview.py
+	   ( iv) Follow the menu instructions in the tutorial
+
+
+6. To run in earnest return to your original working directory and
+        Load in desired LARC project directory using one of
+	LOCAL directions: see local file or add information
+        git clone <location of larc>
+ 	git clone <location of mypylarc>
+        and, when prompted for a password, use git password
+        GitHub directions:
+	TODO
+
+
+7. Verify arrival of the cloned directory material via
+   	  (a) "ls" to see that the desired cloned directory arrived
+	  (b) "cd" down into the appropriate gitroot/project_subdirectory
+
+8. Let the default Makefile inform the routines where subroutines are stored via
+	  (a) run "make"
+        ( If prompted for a password, then
+	  (b) use your git password.    GitHub TODO)
+	  (c) after the make has been done, a doxygen html documentation file
+	           has been added to the larc subdirectory so
+		   do a pwd of your current directory,
+		   append /larc/html/files.html to it,
+	           and load the result as a file into your browser to see
+		   the documention.
+		   GitHub: TODO
+
+9. To Use the LARC routines for an application
+       	   (a) after the "cd" into the cloned LARC project directory
+	       and the run make command above (possibly with git password)
+	       Decide what type of scalar will live in your application object
+	          INTEGER, REAL, COMPLEX, or
+	          Multi-precision types: MPINTEGER, MPRATIONAL, or MPRatComplex
+               then run make again as follows: Eg. : make TYPE=INTEGER,
+	       make TYPE=REAL, make TYPE=COMPLEX, make TYPE=MPINTEGER,
+	       make TYPE=MPRATIONAL, or make TYPE=MPRatComplex
+	       If prompted for a password, then use your new git password.
+	       GitHub TODO
+	   (b) ( i) create a directory eg:with mkdir Your_Project_play
+	       (ii) create a subdirectory Your_Project_play/Data
+	            with subdirectories Your_Project_play/Data/In and
+		   		        Your_Project_play/Data/Out
+       	   (c) copy application_template.py to Your_Project_play/your_proj.py
+	         (The template contains commented-out calls to subroutines
+		     that are explained in the docmentation file accessable
+		     after step 5 above.  These subroutines include:
+		  matrix and vector loading routines,
+		  matrix and vector generating routines,
+		  numpy to LARC data conversion mechanisms,
+		  matrix-matrix operations,
+		  matrix-vector operations,
+		  matrix-scalar, vector-scalar, and scalar-scalar operations,
+		  matrix, vector, scalar norm and property operations),
+		  matrix, vector, scalar, value and ID print operations)
+	   (d) modify the template LARC parameters to fit your application
+	          mat_store_exp = 26  (2**x informs storage array sz & hash sz)
+    		  op_store_exp = 24  (2**x informs storage array sz & hash sz)
+    		  max_level = 10    (2**x is row and column dimension of matrix)
+    		  rnd_sig_bits = -1   # default value 
+    		  trunc_to_zero_bits = -1  # default value
+    		  verbose = 1  # (0 silent; 1 Warning; 2 Chatty, 3 Debug)
+           (e) optionally copy in toy data into Your_Project_play 
+	   (f) modify and debug code in your_proj.py with toy data.
+	   (g) port to larger machine if necessary and retest with toy data.
+	           (porting example instructions in tutorial)
+	   (h) run in earnest.
+		  

@@ -1,0 +1,12 @@
+We suggest that you leave default.init_params unmodified
+and instead copy it to a file <myapp>.init_params that
+you can modify for your application.
+
+You can also use the program write_init_param_file.py to
+create your param file (then edit as you like), with a
+command such as
+   python3 write_init_param_file.py my_app.init_params
+
+
+
+
