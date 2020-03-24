@@ -129,7 +129,7 @@ export TYPE
 
 ## git clone a new copy of larc if needed
 larc: 
-	if [ -d larc ]; then cd larc && git pull ssh://$(GITLARC) master; else git clone ssh://$(GITLARC) ./larc; fi
+	if [ -d larc ]; then cd larc && git pull https://$(GITLARC) master; else git clone https://$(GITLARC) ./larc; fi
 	cd larc && $(MAKE)
 
 ## Create the MyPyLARC libraries
