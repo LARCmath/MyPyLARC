@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -60,6 +61,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__),"../src"))
 import MyPyLARC as mypy
 import math
 
+##
+# \file examples_localHash.py
+#
+# \brief This sample program shows the effects of
+# LARC's locality hash.
+
 if __name__ == '__main__':
 
     print("This code tests matrixID interface\n")
@@ -68,14 +75,17 @@ if __name__ == '__main__':
     mat_store_exp = 26
     op_store_exp = 24
     max_level = 3
-    rnd_sig_bits = 15
-    trunc_to_zero_bits = 20
+    regionbitparam = 15
+    zeroregionbitparam = 20
     verbose = 1
-    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
+    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,regionbitparam,zeroregionbitparam,verbose)
     
     mypy.create_report_thread(1800)
 
     scalarTypeStr = mypy.cvar.scalarTypeStr
+
+    if scalarTypeStr not in ('Real', 'Complex', 'MPReal', 'MPComplex', 'MPRational', 'MPRatComplex', 'Clifford'):
+        raise Exception('Scalar type %s is not supported for this example.' % scalarTypeStr)
 
     # MAKE a matrix to test Globbing
     # two by two tests
@@ -83,48 +93,62 @@ if __name__ == '__main__':
     dim_whole = 2**level
 
     arr_a = list(map(str,[.4, 0, 0, .3]))
-    a_mID = mypy.row_major_list_to_store_matrixID(arr_a,level,level,dim_whole)
+    a_pID = mypy.row_major_list_to_store(arr_a,level,level,dim_whole)
     arr_b = list(map(str,[.8, 0, 0, .6]))
-    b_mID = mypy.row_major_list_to_store_matrixID(arr_b,level,level,dim_whole)
+    b_pID = mypy.row_major_list_to_store(arr_b,level,level,dim_whole)
     arr_c = list(map(str,[-.4, 0, 0, -.3]))
-    c_mID = mypy.row_major_list_to_store_matrixID(arr_c,level,level,dim_whole)
-    print("The matrixIDs of a, b, and c are %d %d %d\n" %(a_mID,b_mID,c_mID))
+    c_pID = mypy.row_major_list_to_store(arr_c,level,level,dim_whole)
+    print("The matrixIDs of a, b, and c are %d %d %d\n"
+        %(mypy.matrixID_from_packedID(a_pID),
+          mypy.matrixID_from_packedID(b_pID),
+          mypy.matrixID_from_packedID(c_pID)))
     
-    d_mID = mypy.matrix_add_matrixID(a_mID,a_mID)
+    d_pID = mypy.matrix_add(a_pID,a_pID)
     
     print("matrix a:")
-    mypy.print_naive_by_matID(a_mID)
+    mypy.print_naive(a_pID)
      
-    print("\nMatrix id of a + a: %d, should be that of b: %d \n" %(d_mID,b_mID))
-    if (d_mID == b_mID):
+    print("\nMatrix id of a + a: %d, should be that of b: %d \n"
+        %(mypy.matrixID_from_packedID(d_pID),
+          mypy.matrixID_from_packedID(b_pID)))
+    if (d_pID == b_pID):
         print("a + a PASSED: \n")
-        mypy.print_naive_by_matID(d_mID)
+        mypy.print_naive(d_pID)
     else: print("FAILED: [.4,0,0,.3] + [.4,0,0,.3] = [.8,0,0,.6]\n")
 
     arr_prod1 = list(map(str,[.16, 0, 0, .09]))
-    prod1_mID = mypy.row_major_list_to_store_matrixID(arr_prod1,level,level,dim_whole)
+    prod1_pID = mypy.row_major_list_to_store(arr_prod1,level,level,dim_whole)
     arr_e = list(map(str,[1, -1, -1, 1]))
-    e_mID = mypy.row_major_list_to_store_matrixID(arr_e,level,level,dim_whole)
+    e_pID = mypy.row_major_list_to_store(arr_e,level,level,dim_whole)
     print("\nmatrix e:")
-    mypy.print_naive_by_matID(e_mID)
+    mypy.print_naive(e_pID)
     
     arr_prod2 = list(map(str,[.4, -.4, -.3, .3]))
-    prod2_mID = mypy.row_major_list_to_store_matrixID(arr_prod2,level,level,dim_whole)
-    print("\nThe matrixIDs of prod1, e, and prod2 are %d %d %d\n" %(prod1_mID,e_mID,prod2_mID))
+    prod2_pID = mypy.row_major_list_to_store(arr_prod2,level,level,dim_whole)
+    print("\nThe matrixIDs of prod1, e, and prod2 are %d %d %d\n"
+    %(mypy.matrixID_from_packedID(prod1_pID),
+      mypy.matrixID_from_packedID(e_pID),
+      mypy.matrixID_from_packedID(prod2_pID)))
 
-    m_mID = mypy.matrix_mult_matrixID(a_mID,a_mID)
-    n_mID = mypy.matrix_mult_matrixID(a_mID,e_mID)
-    print("The matrixIDs of m and n are %d %d\n" %(m_mID,n_mID))
-    print("Matrix id of a * a: %d, should be that of prod1: %d \n" %(m_mID,prod1_mID))
-    if (m_mID == prod1_mID): 
+    m_pID = mypy.matrix_mult(a_pID,a_pID)
+    n_pID = mypy.matrix_mult(a_pID,e_pID)
+    print("The matrixIDs of m and n are %d %d\n"
+        %(mypy.matrixID_from_packedID(m_pID),
+          mypy.matrixID_from_packedID(n_pID)))
+    print("Matrix id of a * a: %d, should be that of prod1: %d \n" %(
+        mypy.matrixID_from_packedID(m_pID),
+        mypy.matrixID_from_packedID(prod1_pID)))
+    if (m_pID == prod1_pID): 
         print("a * a PASSED:")
-        mypy.print_naive_by_matID(m_mID)
+        mypy.print_naive(m_pID)
     else: print("FAILED: [.4,0,0,.3] * [.4,0,0,.3] = [.16, 0, 0, .09]\n")
 
-    print("\nMatrix id of a * e: %d, should be that of prod2: %d \n" %(n_mID,prod2_mID))
-    if (n_mID == prod2_mID): 
+    print("\nMatrix id of a * e: %d, should be that of prod2: %d \n" %(
+        mypy.matrixID_from_packedID(n_pID),
+        mypy.matrixID_from_packedID(prod2_pID)))
+    if (n_pID == prod2_pID): 
         print("a * e PASSED:")
-        mypy.print_naive_by_matID(n_mID)
+        mypy.print_naive(n_pID)
     else: print("FAILED: [.4,0,0,.3] * [1, -1, -1, 1] = [.4, -.4, -.3, .3]\n")
 
     # scalar tests
@@ -132,20 +156,19 @@ if __name__ == '__main__':
     dim_whole = 2**level
 
     arr_f = list(map(str,[.4]))
-    f_mID = mypy.row_major_list_to_store_matrixID(arr_f,level,level,dim_whole)
-    print("We input the value into f (%d) of .4, the matrix is:" %f_mID)
-    mypy.print_naive_by_matID(f_mID)
+    f_pID = mypy.row_major_list_to_store(arr_f,level,level,dim_whole)
+    print("We input the value into f (%d) of .4, the matrix is:"
+         %mypy.matrixID_from_packedID(f_pID))
+    mypy.print_naive(f_pID)
 
     arr_g = list(map(str,[.4+1e-5]))
-    g_mID = mypy.row_major_list_to_store_matrixID(arr_g,level,level,dim_whole)
-    print("We input the value into g (%d) of .4+1e-5, the matrix is:" %g_mID)
-    mypy.print_naive_by_matID(g_mID)
+    g_pID = mypy.row_major_list_to_store(arr_g,level,level,dim_whole)
+    print("We input the value into g (%d) of .4+1e-5, the matrix is:"
+         %mypy.matrixID_from_packedID(g_pID))
+    mypy.print_naive(g_pID)
 
     arr_h = list(map(str,[.4-1e-10]))
-    h_mID = mypy.row_major_list_to_store_matrixID(arr_h,level,level,dim_whole)
-    print("We input the value into h (%d) of .4-1e-10, the matrix is:" %h_mID)
-    mypy.print_naive_by_matID(h_mID)
-
-# remaining tests in test_globbing.py rely on index_* values that are pointers
-# to scalars (defined in global.c). To get these running, we need to create new
-# variables for matrixIDs and make them global.
+    h_pID = mypy.row_major_list_to_store(arr_h,level,level,dim_whole)
+    print("We input the value into h (%d) of .4-1e-10, the matrix is:"
+         %mypy.matrixID_from_packedID(h_pID))
+    mypy.print_naive(h_pID)

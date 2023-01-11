@@ -1,0 +1,5 @@
+
+Known bugs in MyPyLARC:
+
+ * No cleaning for CLIFFORD, UPPER, LOWER in SPR-mode, and for any type in MAR-mode.
+

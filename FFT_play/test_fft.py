@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -62,25 +63,27 @@ sys.path.append(os.path.join(os.path.dirname(__file__),"../src"))
 # import pylarc
 import MyPyLARC as myp
 from ctypes import *
+import json
 
 
 if __name__ == '__main__':
 
     verbose = 0
 
-    ####################################################
-    ##   Print description sparse block algorithm     ##
-    ##   from Cooley-Tukey Radix-2 Factorization      ##
-    ##   see Van Loan, Computational Frameworks for   ##
-    ##   the Fast Fourier Transform, p.21             ##
-    ####################################################
+    #*##################################################
+    #*   Print description sparse block algorithm     #*
+    #*   from Cooley-Tukey Radix-2 Factorization      #*
+    #*   see Van Loan, Computational Frameworks for   #*
+    #*   the Fast Fourier Transform, p.21             #*
+    #*##################################################
     print("\nWe will create the matrices used in the Cooley-Tukey")
     print("radix-2 sparse block recursive FFT that is from Van Loan,")
     print("Computational Frameworks for the Fast Fourier Transform. p.21")
     if verbose:
         print("The level k, 2**k by 2**k Fourier matrix F_k can be")
         print("generated recursively by the equation")
-        print("   F_k = C_k * (I_2 @ F_(k-1) ) * PI_k")
+        print("(subscripts represent levels, not size=2^level):")
+        print("   F_k = C_k * (I_1 @ F_(k-1) ) * PI_k")
         print("where @ is used to indicate the Kronecker product,")
         print("   PI_k is the 2^k by 2^k inverse shuffle matrix ")
         print("     note: PI_k's transverse is its inverse and ")
@@ -110,229 +113,192 @@ if __name__ == '__main__':
 
 
 
-    #################################
-    ##   SET THESE PARAMETERS      ##
-    #################################
-    max_level = 8          ##  problem_size is always power of two!
+    #*###############################
+    #*   SET THESE PARAMETERS      #*
+    #*###############################
+    max_level = 8          #*  problem_size is always power of two!
 
 
-    ####################################################
-    ##   Find out if machine is desktop workstation   ##
-    ##   or a CPU-cycle servers (cs1-cs6)             ##
-    ####################################################
-    machine = os.uname()[1]
-    cs = 0        # on desktop workstation, with smaller memory
-    if (machine.find('cs') >= 0):
-        cs = 1    # on CPU-cycle server cs1-cs6, with larger memory
-        print("This machine is a CPU-cycle server")
-    else:
-        print("This machine is a desktop work station")
+    #*####################################################################
+    # Figure out the scalarType                                          #
+    # In the Makefile you can compile with different scalarType values   #
+    # Define string for using in formating filenames                     #
+    #*####################################################################
+    scalarTypeStr = myp.cvar.scalarTypeStr
 
+    #*####################################################
+    #*   Find out if machine has a large amount of      #*
+    #*   memory available so we can make bigger tables  #*
+    #*####################################################
+    memory_available = myp.memory_available_GiB()
+    if (verbose > 0):
+        print("\nThe memory available is %ld GiB" %memory_available)
+        print("We will use this to select which computing_env to read from parameter file.")
+        print("You could write code to select computing_env automatically.")
 
-    #######################################
-    ##    Print baseline usage report    ##
-    #######################################
-    myp.rusage_report(0, "stdout")
+    if (memory_available > 200):
+        if (verbose > 0):
+            print("\nThis memory is more than 200 GiB\n")
+        computing_env = 'large'
+    else:    
+        if (memory_available > 50):
+            if (verbose > 0):
+                print("\nThis memory is between 50 and 200 GiB\n")
+            computing_env = 'medium'
+        else:
+            if (verbose > 0):
+                print("\nThis memory is less than 50 GiB\n")
+            computing_env = 'small'
+            
+    if (verbose > 0):
+        print("This program believes the computing_environment is %s" %computing_env)
 
+    #*#####################################
+    #*    Print baseline usage report    #*
+    #*#####################################
+    if (verbose > 0):
+        print("")
+        print("In the following baseline usage report")
+        print("RSS, resident set size, refers to size of the process held in RAM.")
+        print("HASHSTATS: hash occupancy means, variances and crash resolution chain lengths")
+        myp.memory_and_time_report(0, "stdout")
 
-    ####################################################################
-    ##    LARCt Initialization of Matrix Store and Operation Stores   ##
-    ####################################################################
-    ## The routine initialize_larc() does the following:              ##
-    ## * creates the matrix and op stores                             ##
-    ## * preloads matrix store with: standard scalars and gates,      ##
-    ##   and with all zero, identity, and (integer) Hadamard matrices ##
-    ##   left to max matrix size                                      ##
-    ####################################################################
+    #* read the parameter file into a python dictionary
+    #with open('../InitParams/REPLACE_THIS.init_params','r') as init_file:
+    with open('../InitParams/fft.init_params','r') as init_file:
+        init_param = json.load(init_file)
+        for p in init_param[computing_env]:
+            if (verbose > 1):
+                print('MatrixExponent: %d' %(p['matrix_exponent']))
+                print('OpExponent: %d' %(p['op_exponent']))
+                print('MaxLevel: %d' %(p['max_level']))
+                print('RegionBitParam: %d' %(p['regionbitparam']))
+                print('ZeroRegionBitParam: %d' %(p['zeroregionbitparam']))
+                print('ReportIntervalSecs: %d' %(p['report_interval_seconds']))
+                print('MinMemRequiredGiB: %d' %(p['min_memGiB_required']))
+                print('Verbose: %d' %(p['verbose']))
+                print('')
+            matrix_exponent = p['matrix_exponent']
+            op_exponent = p['op_exponent']
+            max_level= p['max_level']
+            regionbitparam = p['regionbitparam']
+            zeroregionbitparam = p['zeroregionbitparam']
+            report_interval_seconds = p['report_interval_seconds']
+            min_memGiB_required = p['min_memGiB_required']
+            p_verbose = p['verbose']
 
-    ####################################################################
-    ##    Testing to see what approximation functions.
-    ##    The zerobit thresh parameters that work for F_3 are:
-    ##      -z 53 and smaller
-    ##    The zerobit thresh parameters that fail for F_3 are:
-    ##      -z 54 and larger  
-    ## 
-    ##    The rounding function does not effect whether it
-    ##    works in ranges -s 10 to -s 1000
-    ## 
-    ## 
-    ####################################################################
+    #* warn if the commandline value for verbose differs from the parameter file value for verbose        
+    if (verbose > 0):
+        if (verbose != p_verbose):
+            print("NOTE: This program uses commandline (verbose = %d) " %verbose)
+            print("      rather than the parameter file (verbose = %d)." %p_verbose)
+            print("      The verbose key is:  0=SILENT, 1=BASIC, 2=CHATTY, 3=DEBUG.")
 
-    
-    ## SMALL STORES for working on desktop
-    if max_level <= 8:    
-        matrix_exponent = 22
-        op_exponent = 19   
-
-
-        trunc_to_zero_bits = 54
-        rnd_sig_bits = 1000
-
-        ######################################################
-        ##  Sample failure values for LARC approximation    ##
-        ##  are to set         rnd_sig_bits = 60            ##
-        ##  and                trunc_to_zero_bits = 60      ##
-        ######################################################
-        ##  Default values for LARC approximation are       ##
-        ##  both equal to DBL_MANT_DIG -2                   ##
-        ##  rnd_sig_bits = -1    # default is 53 bits       ##
-        ##  trunc_to_zero_bits = -1 # OLD default is 1074 bits  ##
-        ##  trunc_to_zero_bits = -1 # OLD default is 1074 bits  ##
-        ##  NOTE:  testing shows -z 47 will work            ##
-        ######################################################
-        # trunc_to_zero_bits = 52
-
-
-        ######################################################
-
-        ##  TODO: find out the space in which this test fails!!!
-
-        ##  DBL_MANT_DIG is the number of digits in FLT_MANT  ##
-        ##  why aren't we using DBL_MANT_BITS  ??????? the number of bits
-        ##  used in the mantissa
-
-        ######################################################
-        verbose = 1
-        myp.initialize_larc(matrix_exponent,op_exponent,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
-        myp.create_report_thread(180)
-        print_naive = 0
-        print_nonzeros = 0
-        print("Problem size is small enough to run on desktop")
-        if print_naive:
-           print("  will print files of naive matrices")
-        else: 
-           print("  not printing files of naive matrices")
-        if print_nonzeros:
-           print("  will print files of nonzero matrices\n")
-        else: 
-           print("  not printing files of nonzero matrices\n")
-    ## LARGE STORES for cs1l,cs4l,cs9l
-    else:      
-        ## matrix_exponent = 26
-        ## op_exponent = 24
-        matrix_exponent = 30
-        op_exponent = 31   
-        rnd_sig_bits = -1 # default value
-        trunc_to_zero_bits = -1 # default value
-        ## trunc_to_zero_bits = 20 # truncate to zero if value is less than 2**(-threshold)
-        ## trunc_to_zero_bits = 16 # truncate to zero if value is less than 2**(-threshold)
-        verbose = 1
-        myp.initialize_larc(matrix_exponent,op_exponent,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
-        myp.create_report_thread(3600)   # once per hour 3600
-        print_naive = 0      
-        print_nonzeros = 0
-        print("Problem size is NOT small enough to run on desktop")
-        if print_naive:
-           print("  WARNING: will try to print files of naive matrices!!!")
-        else: 
-           print("  not printing files of naive matrices")
-        if print_nonzeros:
-           print("  WARNING: will print files of nonzero matrices!!!\n")
-        else: 
-           print("  not printing files of nonzero matrices\n")
+    #* initialize LARC
+    myp.initialize_larc(matrix_exponent,op_exponent,max_level,regionbitparam,zeroregionbitparam,verbose)
 
     print("Finished creating LARC matrix and op stores and loading basic matrices.\n")
-    print("Seppuku check to see if program is to large to occur once every 10 minutes.\n")
+    print("StopHogging check to see if program is too large to occur once every 10 minutes.\n")
 
 
-    ################################
+    #*##############################
     # inverse permutation matrices #
-    ################################
+    #*##############################
     print("\nPI_0 matrix is:")
-    PI_0 = myp.create_perm_inv_matrixID(0)
-    myp.print_naive_by_matID(PI_0)
+    PI_0 = myp.create_invShufMat(0)
+    myp.print_naive(PI_0)
 
     print("\nPI_1 matrix is:")
-    PI_1 = myp.create_perm_inv_matrixID(1)
-    myp.print_naive_by_matID(PI_1)
+    PI_1 = myp.create_invShufMat(1)
+    myp.print_naive(PI_1)
 
     print("\nPI_2 matrix is:")
-    PI_2 = myp.create_perm_inv_matrixID(2)
-    myp.print_naive_by_matID(PI_2)
+    PI_2 = myp.create_invShufMat(2)
+    myp.print_naive(PI_2)
 
     print("\nPI_3 matrix is:")
-    PI_3 = myp.create_perm_inv_matrixID(3)
-    myp.print_naive_by_matID(PI_3)
+    PI_3 = myp.create_invShufMat(3)
+    myp.print_naive(PI_3)
 
     # print("\nPI_4 matrix is:")
-    # PI_4 = myp.create_perm_inv_matrixID(4)
-    # myp.print_naive_by_matID(PI_4)
+    # PI_4 = myp.create_invShufMat(4)
+    # myp.print_naive(PI_4)
 
 
-    #########################
+    #*#######################
     # print roots of unity  #
-    #########################
+    #*#######################
     print("\n")
     myp.print_pow2_roots_unity(1)
     myp.print_pow2_roots_unity(2)
     myp.print_pow2_roots_unity(3)
 
 
-    ###############################
+    #*#############################
     # create D matrices in python #
-    ###############################
+    #*#############################
     print("\nD_0 matrix is:")
-    D_0 = myp.create_fft_D_matrixID(0)
-    myp.print_naive_by_matID(D_0)
+    D_0 = myp.create_FFT_DMat(0)
+    myp.print_naive(D_0)
 
     print("\nD_1 matrix is:")
-    D_1 = myp.create_fft_D_matrixID(1)
-    myp.print_naive_by_matID(D_1)
+    D_1 = myp.create_FFT_DMat(1)
+    myp.print_naive(D_1)
 
     print("\nD_2 matrix is:")
-    D_2 = myp.create_fft_D_matrixID(2)
-    myp.print_naive_by_matID(D_2)
+    D_2 = myp.create_FFT_DMat(2)
+    myp.print_naive(D_2)
 
     print("\nD_3 matrix is:")
-    D_3 = myp.create_fft_D_matrixID(3)
-    myp.print_naive_by_matID(D_3)
+    D_3 = myp.create_FFT_DMat(3)
+    myp.print_naive(D_3)
 
 
-    ###############################
+    #*#############################
     # create C matrices in python #
-    ###############################
+    #*#############################
     print("\nC_1 matrix is:")
-    C_1 = myp.create_fft_C_matrixID(1)
-    myp.print_naive_by_matID(C_1)
+    C_1 = myp.create_FFT_CMat(1)
+    myp.print_naive(C_1)
 
     print("\nC_2 matrix is:")
-    C_2 = myp.create_fft_C_matrixID(2)
-    myp.print_naive_by_matID(C_2)
+    C_2 = myp.create_FFT_CMat(2)
+    myp.print_naive(C_2)
 
     print("\nC_3 matrix is:")
-    C_3 = myp.create_fft_C_matrixID(3)
-    myp.print_naive_by_matID(C_3)
+    C_3 = myp.create_FFT_CMat(3)
+    myp.print_naive(C_3)
 
 
-    #################################
+    #*###############################
     # create FFT matrices in python #
-    #################################
+    #*###############################
     print("\nF_1 matrix is:")
-    F_1 = myp.create_fft_matrix_matrixID(1)
-    myp.print_naive_by_matID(F_1)
+    F_1 = myp.create_FFTMat(1)
+    myp.print_naive(F_1)
 
     print("\nF_2 matrix is:")
-    F_2 = myp.create_fft_matrix_matrixID(2)
-    myp.print_naive_by_matID(F_2)
+    F_2 = myp.create_FFTMat(2)
+    myp.print_naive(F_2)
 
     print("\nF_3 matrix is:")
-    F_3 = myp.create_fft_matrix_matrixID(3)
-    myp.print_naive_by_matID(F_3)
+    F_3 = myp.create_FFTMat(3)
+    myp.print_naive(F_3)
 
 
-    #################################
+    #*###############################
     # create FFT matrices in python #
-    #################################
+    #*###############################
     print("\nCreate a vector\n")
     A_arr = list(map(str,[1,0,0,0,0,1,0,0]))
     rowLevel = 3
     colLevel = 0
     dimWhole = 1 << colLevel
-    A_mID = myp.row_major_list_to_store_matrixID(A_arr,rowLevel,colLevel,dimWhole)
-    myp.print_naive_by_matID(A_mID)
+    A_mID = myp.row_major_list_to_store(A_arr,rowLevel,colLevel,dimWhole)
+    myp.print_naive(A_mID)
 
     print("Now multiply FFT matrix by the vector to get the result\n")
-    B_mID = myp.matrix_mult_matrixID(F_3,A_mID)
-    myp.print_naive_by_matID(B_mID)
+    B_mID = myp.matrix_mult(F_3,A_mID)
+    myp.print_naive(B_mID)
 
 

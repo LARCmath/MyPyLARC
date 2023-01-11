@@ -1,0 +1,23 @@
+The program practiceGates.py creates some matrices using routines from
+MyPyLARC/src/gates.c. It is a fairly simple demonstration of how to create a
+reversible circuit using the universal gate library for reversible computing
+(NOT, CNOT, CCNOT) and calculating results from such a circuit.
+
+In reversible computing, we speak of wires which carry bit data, and gates
+which when applied to a set of wires may change the data on one (or more) of
+the wires, which is the target of the gate. Reversible gates always have
+targets, which are flipped (0->1, 1->0) when the gate is executed. The
+controlled gates also have one or more control wires which determine whether or
+not to execute the gate on the target; generally, the value on the control
+wire(s) must be 1 for the gate to execute, but there is an option for the
+singly-controlled NOT to have the gate execute when a wire is 0.
+
+We are concerned with the effect of the circuit on input data, which for n
+wires can have 2^n different values. The LARC matrices which represent the
+effect of the gate on the circuit are 2^n by 2^n permutation matrices.
+
+The order in which gates are executed matters, since matrices do not in general
+commute. However, for these gate matrices, there is a simple rule which
+determines whether the matrices for gates A and B commute: AB=BA if no target
+wire on A is a control wire on B and vice versa. A set of gates that commute 
+may be done in any order.

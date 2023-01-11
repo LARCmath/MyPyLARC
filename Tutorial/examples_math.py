@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -62,7 +63,13 @@ import MyPyLARC as mypy
 from ctypes import *
 
 # Python Interface version of test_math.py
-# Uses matrixIDs instead of addresses
+# Uses packedIDs instead of addresses
+
+##
+# \file examples_math.py
+#
+# \brief This routine illustrates various matrix
+# operations on both square and nonsquare matrices.
 
 if __name__ == '__main__':
 
@@ -72,50 +79,50 @@ if __name__ == '__main__':
     mat_store_exp = 26
     op_store_exp = 24
     max_level = 10
-    rnd_sig_bits = -1   # default value
-    trunc_to_zero_bits = -1  # default value
+    regionbitparam = -1   # default value
+    zeroregionbitparam = -1  # default value
     mypy.create_report_thread(1800)
     verbose = 1
-    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
+    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,regionbitparam,zeroregionbitparam,verbose)
 
     scalarTypeStr = mypy.cvar.scalarTypeStr
 
     #  PLAYING WITH PREWRITTEN NONSQUARE MATRIX
     filename = "Data/In/sample.1.2.%s.json" %scalarTypeStr
     print("About to test read %s\n" %filename)
-    samp_matrixID = mypy.read_larcMatrix_file_return_matID(os.path.join(os.path.dirname(__file__),filename))
+    samp_packedID = mypy.read_larcMatrixFile(os.path.join(os.path.dirname(__file__),filename))
     print("We read in the LARCMatrix file\n")
-    mypy.print_naive_by_matID(samp_matrixID)
+    mypy.print_naive(samp_packedID)
     
     print("does scalarM1_val print?")
     scalarM1_val = '-1'
-    scalarM1_matrixID = mypy.get_valID_from_valString(scalarM1_val)
-    mypy.print_naive_by_matID(scalarM1_matrixID)
+    scalarM1_packedID = mypy.get_valID_from_valString(scalarM1_val)
+    mypy.print_naive(scalarM1_packedID)
     
     print("testing scalar_mult:")
-    samp2_matrixID = mypy.scalar_mult_matrixID(scalarM1_matrixID,samp_matrixID)
-    mypy.print_naive_by_matID(samp2_matrixID)
+    samp2_packedID = mypy.scalar_mult(scalarM1_packedID,samp_packedID)
+    mypy.print_naive(samp2_packedID)
     
     print("testing addition:")
-    samp3_matrixID = mypy.matrix_add_matrixID(samp_matrixID,samp2_matrixID)
-    mypy.print_naive_by_matID(samp3_matrixID)
+    samp3_packedID = mypy.matrix_add(samp_packedID,samp2_packedID)
+    mypy.print_naive(samp3_packedID)
     
     print("testing adjoint:")
-    samp3_matrixID = mypy.matrix_adjoint_matrixID(samp_matrixID)
-    mypy.print_naive_by_matID(samp3_matrixID)
+    samp3_packedID = mypy.adjoint(samp_packedID)
+    mypy.print_naive(samp3_packedID)
     
     print("testing non-square matrix mult:")
-    samp4_matrixID = mypy.matrix_mult_matrixID(samp3_matrixID,samp_matrixID)
-    mypy.print_naive_by_matID(samp4_matrixID)
+    samp4_packedID = mypy.matrix_mult(samp3_packedID,samp_packedID)
+    mypy.print_naive(samp4_packedID)
     print("")
-    samp4_matrixID = mypy.matrix_mult_matrixID(samp_matrixID,samp3_matrixID)
-    mypy.print_naive_by_matID(samp4_matrixID)
+    samp4_packedID = mypy.matrix_mult(samp_packedID,samp3_packedID)
+    mypy.print_naive(samp4_packedID)
     print("testing kron product:")
-    samp4_matrixID = mypy.kronecker_product_matrixID(samp_matrixID,samp_matrixID)
-    mypy.print_naive_by_matID(samp4_matrixID)
+    samp4_packedID = mypy.kronecker_product(samp_packedID,samp_packedID)
+    mypy.print_naive(samp4_packedID)
     print("testing join:")
-    samp4_matrixID = mypy.join_matrixID(samp_matrixID,samp_matrixID)
-    mypy.print_naive_by_matID(samp4_matrixID)
+    samp4_packedID = mypy.join(samp_packedID,samp_packedID)
+    mypy.print_naive(samp4_packedID)
     print("testing stack:")
-    samp4_matrixID = mypy.stack_matrixID(samp_matrixID,samp_matrixID)
-    mypy.print_naive_by_matID(samp4_matrixID)
+    samp4_packedID = mypy.stack(samp_packedID,samp_packedID)
+    mypy.print_naive(samp4_packedID)

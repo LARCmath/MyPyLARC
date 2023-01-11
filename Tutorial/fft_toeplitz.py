@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 import os
@@ -59,19 +60,34 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__),"../src"))
 import MyPyLARC as mypy
 from ctypes import *
-import json    ## for loading parameter files
+import json    #* for loading parameter files
 import numpy as np
 import random
+
+
+##
+# \file fft_toeplitz.py
+#
+# \brief This routine illustrates how two matrices
+# which are each somewhat compressible in LARC behave
+# when multiplied.
+#
+# The matrices used are
+# a permutation submatrices that we had from
+# our block sparse
+# fast Fourier transform (FFT),
+# and a random Toeplitz matrix.
+# The LARCsize of the product is returned.
 
 
 if __name__ == '__main__':
 
 
-    ######################################################################
-    ## Set the level (matrices are 2**level by 2**level), the           ##
-    ## LARC verbosity (0=SILENT, 1=BASIC, 2=CHATTY, 3=DEBUG, 4=ALL), ##
-    ## and the LOCAL_verbosity.                                         ##
-    ######################################################################
+    #*####################################################################
+    #* Set the level (matrices are 2**level by 2**level), the           ##
+    #* LARC verbosity (0=SILENT, 1=BASIC, 2=CHATTY, 3=DEBUG, 4=ALL), ##
+    #* and the LOCAL_verbosity.                                         ##
+    #*####################################################################
 
     if 3 == len(sys.argv):
         level = int(sys.argv[1]) 
@@ -104,9 +120,9 @@ if __name__ == '__main__':
         print("\t0=SILENT, 1=BASIC, 2=CHATTY, and 3=DEBUG.")
 
 
-    ######################################################################
+    #*####################################################################
     # Figure out the scalarType used during compiling of MyPyLARC        #
-    ######################################################################
+    #*####################################################################
     # if (!mypy.cvar.scalarTypeStr):
     #        print("\nYou need to compile MyPyLARC.)
     #    explain_scalarType()
@@ -120,12 +136,12 @@ if __name__ == '__main__':
         print("\nYou have compiled MyPyLARC with scalarType %s\n"%scalarTypeStr)
         
 
-    ####################################################
-    ##   Print description sparse block algorithm     ##
-    ##   from Cooley-Tukey Radix-2 Factorization      ##
-    ##   see Van Loan, Computational Frameworks for   ##
-    ##   the Fast Fourier Transform, p.21             ##
-    ####################################################
+    #*##################################################
+    #*   Print description sparse block algorithm     ##
+    #*   from Cooley-Tukey Radix-2 Factorization      ##
+    #*   see Van Loan, Computational Frameworks for   ##
+    #*   the Fast Fourier Transform, p.21             ##
+    #*##################################################
     if (verbose == 2):
         print("\nWe will create the matrices used in the Cooley-Tukey")
         print("radix-2 sparse block recursive FFT that is from Van Loan,")
@@ -133,7 +149,8 @@ if __name__ == '__main__':
         if verbose:
             print("The level k, 2**k by 2**k Fourier matrix F_k can be")
             print("generated recursively by the equation")
-            print("   F_k = C_k * (I_2 @ F_(k-1) ) * PI_k")
+            print("(subscripts represent levels, not size=2^level):")
+            print("   F_k = C_k * (I_1 @ F_(k-1) ) * PI_k")
             print("where @ is used to indicate the Kronecker product,")
             print("   PI_k is the 2^k by 2^k inverse shuffle matrix ")
             print("     note: PI_k's transverse is its inverse and ")
@@ -163,149 +180,116 @@ if __name__ == '__main__':
 
 
 
-    ##   TODO: Hunting in uname for computing_env is a reference to local names cs2,cs3, ...
-    ######################################################
-    ##   Find out if machine has a large amount of      ##
-    ##   memory available so we can make bigger tables  ##
-    ######################################################
+    #*####################################################
+    #*   Find out if machine has a large amount of      ##
+    #*   memory available so we can make bigger tables  ##
+    #*####################################################
     memory_available = mypy.memory_available_GiB()
     print("\nThe memory available is %ld GiB\n" %memory_available)
+
     if (memory_available > 200):
-        print("\n This memory is more than 200 GiB\n")
+        if (verbose > 0):
+            print("\nThis memory is more than 200 GiB\n")
+        computing_env = 'large'
     else:
-        print("\n This memory is less than 200 GiB\n")
+        if (memory_available > 50):
+            if (verbose > 0):
+                print("\nThis memory is between 50 and 200 GiB\n")
+            computing_env = 'medium'
+        else:
+            if (verbose > 0):
+                print("\nThis memory is less than 50 GiB\n")
+            computing_env = 'small'
 
     userInput= input("Press <Enter> to continue\n")
 
 
-
-    
-    ####################################################
-    ##   Find out if machine is desktop workstation   ##
-    ##   or a CPU-cycle servers (cs1-cs6)             ##
-    ####################################################
-    machine = os.uname()[1]
-    cs = 0        # on desktop workstation, with smaller memory
-    computing_env = 'desktop'
-    if (machine.find('cs') >= 0):
-        cs = 1    # on CPU-cycle server cs1-cs6, with larger memory
-        computing_env = 'server'
-        if (verbose > 1):
-            print(" code on a CPU-cycle server")
-    else:
-        if (verbose > 1):
-            print("This machine is a desktop work station")
-
-
-    #######################################
-    ##    Print baseline usage report    ##
-    #######################################
+    #*#####################################
+    #*    Print baseline usage report    ##
+    #*#####################################
     if (verbose > 1):
-        mypy.rusage_report(0, "stdout")
+        mypy.memory_and_time_report(0, "stdout")
     
 
-    ####################################################################
-    ##  For the FFT application we have found that the following parameters
-    ##  work reasonably well:
-    ##    
-    ##  SMALL STORES for working on desktop and max_level <= 8:    
-    ##      matrix_exponent = 22
-    ##      op_exponent = 19   
-    ##    
-    ##    
-    ##  LARGE STORES for working on cycle server for max_level > 8:    
-    ##      matrix_exponent = 31
-    ##      op_exponent = 30
-    ##
-    ##  To get F_3 to work we have a cutoff point around -z 53 or -z 54
-    ##  so in order to succeed we set:
-    ##      trunc_to_zero_bits = 54
-    ##  The rounding function does not effect whether it
-    ##  works in ranges -s 10 to -s 1000 so we set
-    ##      rnd_sig_bits = 1000
-    ##
-    ####################################################################
+    #*##################################################################
+    #*  For the FFT application we have found that the following parameters
+    #*  work reasonably well:
+    #*    
+    #*  SMALL STORES for max_level <= 8:    
+    #*      matrix_exponent = 22
+    #*      op_exponent = 19   
+    #*    
+    #*    
+    #*  LARGE STORES for max_level > 8:    
+    #*      matrix_exponent = 31
+    #*      op_exponent = 30
+    #*
+    #*  These region parameters worked well in 2019, but the data
+    #*    should be updated to account for better precision and for
+    #*    multiprecision types
+    #*  To get F_3 to work we have a cutoff point around -z 53 or -z 54
+    #*  so in order to succeed we set:
+    #*      zeroregionbitparam = 54
+    #*  The rounding function does not effect whether it
+    #*  works in ranges -s 10 to -s 1000 so we set
+    #*      regionbitparam = 1000
+    #*
+    #*##################################################################
 
-    ## OLD NOTES
-        ######################################################
-        ##  Sample failure values for LARC approximation    ##
-        ##  are to set         rnd_sig_bits = 60            ##
-        ##  and                trunc_to_zero_bits = 60      ##
-        ######################################################
-        ##  Default values for LARC approximation are       ##
-        ##  both equal to DBL_MANT_DIG -2                   ##
-        ##  rnd_sig_bits = -1    # default is 53 bits       ##
-        ##  trunc_to_zero_bits = -1 # OLD default is 1074 bits  ##
-        ##  trunc_to_zero_bits = -1 # OLD default is 1074 bits  ##
-        ##  NOTE:  testing shows -z 47 will work            ##
-        ######################################################
-        # trunc_to_zero_bits = 52
-        ######################################################
-        ##  TODO: find out the space in which this test fails!!!
-        ##  DBL_MANT_DIG is the number of digits in FLT_MANT  ##
-        ##  why aren't we using DBL_MANT_BITS  ??????? the number of bits
-        ##  used in the mantissa
-        ######################################################
+    #*##################################################################
+    #*    LARC  Initialization of Matrix Store and Operation Stores   ##
+    #*##################################################################
+    #* The routine initialize_larc() does the following:              ##
+    #* * creates the matrix and op stores                             ##
+    #* * preloads matrix store with: standard scalars and gates,      ##
+    #*   and with all zero, identity, and (integer) Hadamard matrices ##
+    #*   left to max matrix size                                      ##
+    #* To make life easier we can read the parameters for the         ##
+    #* the initialization from a prestored file.                      ##
+    #*##################################################################
 
-    ####################################################################
-    ##    LARCt Initialization of Matrix Store and Operation Stores   ##
-    ####################################################################
-    ## The routine initialize_larc() does the following:              ##
-    ## * creates the matrix and op stores                             ##
-    ## * preloads matrix store with: standard scalars and gates,      ##
-    ##   and with all zero, identity, and (integer) Hadamard matrices ##
-    ##   left to max matrix size                                      ##
-    ## To make life easier we can read the parameters for the         ##
-    ## the initialization from a prestored file.                      ##
-    ####################################################################
-
-    ## read the parameter file into a python dictionary
+    #* read the parameter file into a python dictionary
     with open('../InitParams/fft.init_params','r') as init_file:
         init_param = json.load(init_file)
         for p in init_param[computing_env]:
             print('MatrixExponent: %d' %(p['matrix_exponent']))
             print('OpExponent: %d' %(p['op_exponent']))
             print('MaxLevel: %d' %(p['max_level']))
-            print('RoundSigBits: %d' %(p['rnd_sig_bits']))
-            print('TruncToZeroBits: %d' %(p['trunc_to_zero_bits']))
+            print('RegionBitParam: %d' %(p['regionbitparam']))
+            print('ZeroRegionBitParam: %d' %(p['zeroregionbitparam']))
             print('ReportIntervalSecs: %d' %(p['report_interval_seconds']))
             print('Verbose: %d' %(p['verbose']))
             print('')
             matrix_exponent = p['matrix_exponent']
             op_exponent = p['op_exponent']
             max_level= p['max_level']
-            rnd_sig_bits = p['rnd_sig_bits']
-            trunc_to_zero_bits = p['trunc_to_zero_bits']
+            regionbitparam = p['regionbitparam']
+            zeroregionbitparam = p['zeroregionbitparam']
             report_interval_seconds = p['report_interval_seconds']
             p_verbose = p['verbose']
 
-    ## warn if the commandline value for verbose differs from the parameter file value for verbose        
+    #* warn if the commandline value for verbose differs from the parameter file value for verbose        
     if (verbose > 0):
         if (verbose != p_verbose):
             print("WARNING: Using commandline (verbose = %d) rather than param file (verbose = %d)!" %(verbose,p_verbose))
             print("         The verbose key is:  0=SILENT, 1=BASIC, 2=CHATTY, 3=DEBUG.")
 
-    ## initialize LARC
-    mypy.initialize_larc(matrix_exponent,op_exponent,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
+    #* initialize LARC
+    mypy.initialize_larc(matrix_exponent,op_exponent,max_level,regionbitparam,zeroregionbitparam,verbose)
 
-    ## if in CHATTY OR DEBUG mode start a reporting thread              
+    #* if in CHATTY OR DEBUG mode start a reporting thread              
     if (verbose > 1):              
         mypy.create_report_thread(report_interval_seconds)
 
-    ## Finished with initializing LARC
+    #* Finished with initializing LARC
     if (verbose > 1):             
-        if computing_env == 'desktop':
-            print("We think we are running on a desktop")
-        else:  ## Large memory for cs1, cs4, cs9
-            print("We think we are running on a cycle server.")
-
         print("Finished creating LARC matrix and op stores and loading basic matrices.\n")
-        print("Seppuku check to see if program is to large to occur once every 10 minutes.\n")
+        print("stopHogging check to see if program is too large to occur once every 10 minutes.\n")
 
 
-    ############################################################
-    ## if matrices are too large do not allow naive printing  ##            
-    ############################################################
+    #*##########################################################
+    #* if matrices are too large do not allow naive printing  ##            
+    #*##########################################################
     if (level < 4):
         print_naive = 1
     else:
@@ -317,45 +301,45 @@ if __name__ == '__main__':
             print("  The level= %d, is too big to reasonable print naive formated matrices to the screen." %level)
                   
 
-    ################################
+    #*##############################
     # inverse permutation matrices #
-    ################################
+    #*##############################
     if (verbose == 3): # DEBUG mode (verbose = 3)
         print("\nPI_0 matrix is:")
-        PI_0 = mypy.create_perm_inv_matrixID(0)
+        PI_0 = mypy.create_invShufMat(0)
         if print_naive:
-            mypy.print_naive_by_matID(PI_0)
+            mypy.print_naive(PI_0)
             
         print("\nPI_1 matrix is:")
-        PI_1 = mypy.create_perm_inv_matrixID(1)
+        PI_1 = mypy.create_invShufMat(1)
         if print_naive:
-            mypy.print_naive_by_matID(PI_1)
+            mypy.print_naive(PI_1)
             
         print("\nPI_2 matrix is:")
-        PI_2 = mypy.create_perm_inv_matrixID(2)
+        PI_2 = mypy.create_invShufMat(2)
         if print_naive:
-            mypy.print_naive_by_matID(PI_2)
+            mypy.print_naive(PI_2)
                     
         print("\nPI_3 matrix is:")
-        PI_3 = mypy.create_perm_inv_matrixID(3)
+        PI_3 = mypy.create_invShufMat(3)
         if print_naive:
-            mypy.print_naive_by_matID(PI_3)
+            mypy.print_naive(PI_3)
 
     PI_name = "PI_"+str(level)        
-    PI_ID = mypy.create_perm_inv_matrixID(level)
+    PI_ID = mypy.create_invShufMat(level)
     print("\nFormed %s the inverse shuffle matrix for a DFT: it has matrixID %d." %(PI_name,PI_ID))
     filename = "Data/Out/%s_%s.json" %(PI_name,scalarTypeStr) 
     if (print_naive and (verbose > 1)):
-        mypy.print_naive_by_matID(PI_ID)
+        mypy.print_naive(PI_ID)
     if (verbose > 1):
         print("Printed %s into LARC compressed formated json file %s." %(PI_name,filename))
-    PI_larcSize = mypy.write_larcMatrix_file_return_larcSize_by_matID(PI_ID,filename)
+    PI_larcSize = mypy.fprint_larcMatrixFile(PI_ID,filename)
     print("The %s matrix of level %d has larcSize %d" %(PI_name,level,PI_larcSize));
 
 
-    #########################
+    #*#######################
     # print roots of unity  #
-    #########################
+    #*#######################
     if (verbose == 3): # DEBUG mode (verbose = 3)
         print("\nTesting calculation for roots of unity:")
         mypy.print_pow2_roots_unity(1)
@@ -363,110 +347,109 @@ if __name__ == '__main__':
         mypy.print_pow2_roots_unity(3)
 
 
-    ###############################
+    #*#############################
     # create D matrices in python #
-    ###############################
+    #*#############################
     if (verbose == 3): # DEBUG mode (verbose = 3)
         print("\nD_0 matrix is:")
-        D_0 = mypy.create_fft_D_matrixID(0)
+        D_0 = mypy.create_FFT_DMat(0)
         if print_naive:
-            mypy.print_naive_by_matID(D_0)
+            mypy.print_naive(D_0)
 
         print("\nD_1 matrix is:")
-        D_1 = mypy.create_fft_D_matrixID(1)
+        D_1 = mypy.create_FFT_DMat(1)
         if print_naive:
-            mypy.print_naive_by_matID(D_1)
+            mypy.print_naive(D_1)
 
         print("\nD_2 matrix is:")
-        D_2 = mypy.create_fft_D_matrixID(2)
+        D_2 = mypy.create_FFT_DMat(2)
         if print_naive:
-            mypy.print_naive_by_matID(D_2)
+            mypy.print_naive(D_2)
 
         print("\nD_3 matrix is:")
-        D_3 = mypy.create_fft_D_matrixID(3)
+        D_3 = mypy.create_FFT_DMat(3)
         if print_naive:
-            mypy.print_naive_by_matID(D_3)
+            mypy.print_naive(D_3)
 
     D_name = "D_"+str(level)        
-    D_ID = mypy.create_fft_D_matrixID(level)
+    D_ID = mypy.create_FFT_DMat(level)
     print("\nFormed %s the D matrix for an DFT; it has matrixID %d." %(D_name,D_ID))
     filename = "Data/Out/%s_%s.json" %(D_name,scalarTypeStr) 
     if (print_naive and (verbose > 1)):
-        mypy.print_naive_by_matID(D_ID)
+        mypy.print_naive(D_ID)
     if (verbose > 1):
         print("Printed %s into LARC compressed formated json file %s." %(D_name,filename))
-    D_larcSize = mypy.write_larcMatrix_file_return_larcSize_by_matID(D_ID,filename)
+    D_larcSize = mypy.fprint_larcMatrixFile(D_ID,filename)
     print("The %s matrix of level %d has larcSize %d" %(D_name,level,D_larcSize));
 
 
-    ###############################
+    #*#############################
     # create C matrices in python #
-    ###############################
+    #*#############################
     if (verbose == 3): # DEBUG mode (verbose = 3)
         print("\nC_1 matrix is:")
-        C_1 = mypy.create_fft_C_matrixID(1)
+        C_1 = mypy.create_FFT_CMat(1)
         if print_naive:
-            mypy.print_naive_by_matID(C_1)
+            mypy.print_naive(C_1)
 
         print("\nC_2 matrix is:")
-        C_2 = mypy.create_fft_C_matrixID(2)
+        C_2 = mypy.create_FFT_CMat(2)
         if print_naive:
-            mypy.print_naive_by_matID(C_2)
+            mypy.print_naive(C_2)
 
         print("\nC_3 matrix is:")
-        C_3 = mypy.create_fft_C_matrixID(3)
+        C_3 = mypy.create_FFT_CMat(3)
         if print_naive:
-            mypy.print_naive_by_matID(C_3)
+            mypy.print_naive(C_3)
 
     C_name = "C_"+str(level)        
-    C_ID = mypy.create_fft_C_matrixID(level)
+    C_ID = mypy.create_FFT_CMat(level)
     print("\nFormed %s the C matrix for a DFT; it has matrixID %d." %(C_name,C_ID))
     filename = "Data/Out/%s_%s.json" %(C_name,scalarTypeStr) 
     if (print_naive and (verbose > 1)):
-        mypy.print_naive_by_matID(C_ID)
+        mypy.print_naive(C_ID)
     if (verbose > 1):
         print("Printed %s into LARC compressed formated json file %s." %(C_name,filename))
-    C_larcSize = mypy.write_larcMatrix_file_return_larcSize_by_matID(C_ID,filename)
+    C_larcSize = mypy.fprint_larcMatrixFile(C_ID,filename)
     print("The %s matrix of level %d has larcSize %d" %(C_name,level,C_larcSize));
 
         
-    #################################
+    #*###############################
     # create FFT matrices in python #
-    #################################
+    #*###############################
     if (verbose == 3): # DEBUG mode (verbose = 3)
         print("\nF_1 matrix is:")
-        F_1 = mypy.create_fft_matrix_matrixID(1)
+        F_1 = mypy.create_FFTMat(1)
         if print_naive:
-            mypy.print_naive_by_matID(F_1)
+            mypy.print_naive(F_1)
 
         print("\nF_2 matrix is:")
-        F_2 = mypy.create_fft_matrix_matrixID(2)
+        F_2 = mypy.create_FFTMat(2)
         if print_naive:
-            mypy.print_naive_by_matID(F_2)
+            mypy.print_naive(F_2)
 
         print("\nF_3 matrix is:")
-        F_3 = mypy.create_fft_matrix_matrixID(3)
+        F_3 = mypy.create_FFTMat(3)
         if print_naive:
-            mypy.print_naive_by_matID(F_3)
+            mypy.print_naive(F_3)
 
     F_name = "F_"+str(level)        
-    F_ID = mypy.create_fft_matrix_matrixID(level)
+    F_ID = mypy.create_FFTMat(level)
     print("\nFormed %s the DFT matrix; it has matrixID %d." %(F_name,F_ID))
     filename = "Data/Out/%s_%s.json" %(F_name,scalarTypeStr) 
     if (print_naive and (verbose > 1)):
-        mypy.print_naive_by_matID(F_ID)  
+        mypy.print_naive(F_ID)  
     
     if (verbose > 1):
         print("Printed %s into LARC compressed formated json file %s." %(F_name,filename))
-    F_larcSize = mypy.write_larcMatrix_file_return_larcSize_by_matID(F_ID,filename)
+    F_larcSize = mypy.fprint_larcMatrixFile(F_ID,filename)
     print("The %s matrix of level %d has larcSize %d" %(F_name,level,F_larcSize));
 
 
         
-    ################################################
-    # create random Toeplitz matrices with level 3 #
-    ################################################
-    ## level = 3
+    #*################################################
+    # create random Toeplitz matrices of given level #
+    #*################################################
     dim_whole = 2**level
 
     if scalarTypeStr in ('Real', 'MPReal', 'MPRational'):
@@ -497,25 +480,25 @@ if __name__ == '__main__':
 
     T_name = "T_"+str(level)
     # creating or finding the matrix associated with the array
-    T_ID = mypy.row_major_list_to_store_matrixID(arr, level, level, dim_whole)
+    T_ID = mypy.row_major_list_to_store(arr, level, level, dim_whole)
     filename = "Data/Out/%s_%s.json" %(T_name,scalarTypeStr)
     if (print_naive and (verbose > 1)):
-        mypy.print_naive_by_matID(T_ID)
+        mypy.print_naive(T_ID)
     print("\nPrinted the Toeplitz matrix %s to file %s." %(T_name,filename))
-    T_larcSize = mypy.write_larcMatrix_file_return_larcSize_by_matID(T_ID,filename)
+    T_larcSize = mypy.fprint_larcMatrixFile(T_ID,filename)
     print("The %s matrix of level %d has larcSize %d" %(T_name,level,T_larcSize));
 
     
-    ###########################################################
+    #*#########################################################
     # apply inverse perm matrix PI_l to a Toeplitz matrix T_l #
     # where l is the level.                                   #
-    ###########################################################
+    #*#########################################################
     print("\nNow multiplying the inverse shuffle matrix %s by the Toeplitz matrix %s" %(PI_name,T_name))
     PIT_name = "PIT_"+str(level)
-    PIT_ID = mypy.matrix_mult_matrixID(PI_ID,T_ID)
+    PIT_ID = mypy.matrix_mult(PI_ID,T_ID)
     if (print_naive and (verbose > 1)):
-        mypy.print_naive_by_matID(PIT_ID)
+        mypy.print_naive(PIT_ID)
     filename = "Data/Out/%s_%s.json" %(PIT_name,scalarTypeStr)
-    PIT_larcSize = mypy.write_larcMatrix_file_return_larcSize_by_matID(PIT_ID,filename)
+    PIT_larcSize = mypy.fprint_larcMatrixFile(PIT_ID,filename)
     print("The %s matrix of level %d has larcSize %d" %(PIT_name,level,PIT_larcSize));
 

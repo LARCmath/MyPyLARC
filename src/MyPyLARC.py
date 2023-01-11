@@ -1,5 +1,5 @@
-#              pylarc.py
-##################################################################
+#              MyPyLARC.py
+#*################################################################
 #                                                                #
 # Copyright (C) 2014, Institute for Defense Analyses             #
 # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -12,6 +12,7 @@
 #   - Steve Cuccaro (IDA-CCS)                                    #
 #   - John Daly (LPS)                                            #
 #   - John Gilbert (UCSB, IDA adjunct)                           #
+#   - Mark Pleszkoch (IDA-CCS)                                   #
 #   - Jenny Zito (IDA-CCS)                                       #
 #                                                                #
 # Additional contributors are listed in "LARCcontributors".      #
@@ -49,16 +50,34 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
 #                                                                #
-##################################################################
+#*################################################################
 
+
+## \include high-level-doc.d
+
+## \file MyPyLARC.py
+#  \brief This package provides access to all the LARC and MyPyLARC C and
+#  Python code. (Documentation for LARC code may be found
+#  <A HREF="../larc/html/index.html">here</A>.)
+# 
+#  The module is set up so that all LARC and MyPyLARC functions can be found
+#  in the MyPyLARC.py namespace. Thus, if the calling code has the statement
+#       "import MyPyLARC as mpl",
+#  all functions in LARC and MyPYLARC may be referenced as mpl.function_name().
+
+from __future__ import print_function, division
 
 import os
 import sys
-# import random
-sys.path.append(os.path.join(os.path.dirname(__file__),"../larc/src"))
-from mplSWIG import *
-from pylarc import *
-# from matrixUtils import *
-
-# from ctypes import *
+current_directory = os.path.dirname(__file__)
+# gv is in the directory ../larc/src
+sys.path.append(os.path.join(current_directory,"../larc/src"))
+import gv
+# set the PATH_TO_SWIG variable to the current directory
+gv.PATH_TO_SWIG = current_directory
+# set SWIG_TO_USE to the name of the SWIG-generated python
+gv.SWIG_TO_USE = 'mplSWIG'
+# larc_utilities is in larc/src/python
+sys.path.append(os.path.join(current_directory,'../larc/src/python'))
+from larc_utilities import *
 

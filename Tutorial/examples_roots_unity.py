@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -61,167 +62,144 @@ sys.path.append(os.path.join(os.path.dirname(__file__),"../src"))
 # import pylarc
 import MyPyLARC as mypy
 from ctypes import *
+import json
 
+
+##
+# \file examples_roots_unity.py
+#
+# \brief This routine generates the 24th roots of unity w,
+# and then checks for the appropriate closure under
+# multiplication of the various powers of w.
+#
+# That is, it verifies that
+#    matrixProduct(packedID(w^i),packedID(w^j)) = packedID(w^k)
+# where k congruent to i+j mod 24.
 
 if __name__ == '__main__':
 
 
-    #################################
-    ##   SET THESE PARAMETERS      ##
-    #################################
-    max_level = 8          ##  problem_size is always power of two!
+    #*###############################
+    #*   SET THESE PARAMETERS      ##
+    #*###############################
+    max_level = 8          #*  problem_size is always power of two!
+    verbose = 0
 
     
-    ####################################################
-    ##   Find out if machine is desktop workstation   ##
-    ##   or a CPU-cycle servers (cs1-cs6)             ##
-    ####################################################
-    machine = os.uname()[1]
-    cs = 0        # on desktop workstation, with smaller memory
-    if (machine.find('cs') >= 0):
-        cs = 1    # on CPU-cycle server cs1-cs6, with larger memory
-        print("This machine is a CPU-cycle server")
-    else:
-        print("This machine is a desktop work station")
+    #*####################################################################
+    # Figure out the scalarType                                          #
+    # In the Makefile you can compile with different scalarType values   #
+    # Define string for using in formating filenames                     #
+    #*####################################################################
+    scalarTypeStr = mypy.cvar.scalarTypeStr
+
+    if scalarTypeStr not in ('Complex', 'MPComplex', 'MPRatComplex'):
+        raise Exception('Scalar type %s is not supported for this example.' % scalarTypeStr)
+
+    #*####################################################
+    #*   Find out if machine has a large amount of      ##
+    #*   memory available so we can make bigger tables  ##
+    #*####################################################
+    memory_available = mypy.memory_available_GiB()
+    if (verbose > 0):
+        print("\nThe memory available is %ld GiB" %memory_available)
+        print("We will use this to select which computing_env to read from parameter file.")
+        print("You could write code to select computing_env automatically.")
+
+    if (memory_available > 200):
+        if (verbose > 0):
+            print("\nThis memory is more than 200 GiB\n")
+        computing_env = 'large'
+    else:    
+        if (memory_available > 50):
+            if (verbose > 0):
+                print("\nThis memory is between 50 and 200 GiB\n")
+            computing_env = 'medium'
+        else:
+            if (verbose > 0):
+                print("\nThis memory is less than 50 GiB\n")
+            computing_env = 'small'
+            
+    if (verbose > 0):
+        print("This program believes the computing_environment is %s" %computing_env)
+
+    #*#####################################
+    #*    Print baseline usage report    ##
+    #*#####################################
+    if (verbose > 0):
+        print("")
+        print("In the following baseline usage report")
+        print("RSS, resident set size, refers to size of the process held in RAM.")
+        print("HASHSTATS: hash occupancy means, variances and crash resolution chain lengths")
+        mypy.memory_and_time_report(0, "stdout")
+
+    #* read the parameter file into a python dictionary
+    #with open('../InitParams/REPLACE_THIS.init_params','r') as init_file:
+    with open('../InitParams/tutorial.init_params','r') as init_file:
+        init_param = json.load(init_file)
+        for p in init_param[computing_env]:
+            if (verbose > 1):
+                print('MatrixExponent: %d' %(p['matrix_exponent']))
+                print('OpExponent: %d' %(p['op_exponent']))
+                print('MaxLevel: %d' %(p['max_level']))
+                print('RegionBitParam: %d' %(p['regionbitparam']))
+                print('ZeroRegionBitParam: %d' %(p['zeroregionbitparam']))
+                print('ReportIntervalSecs: %d' %(p['report_interval_seconds']))
+                print('MinMemRequiredGiB: %d' %(p['min_memGiB_required']))
+                print('Verbose: %d' %(p['verbose']))
+                print('')
+            matrix_exponent = p['matrix_exponent']
+            op_exponent = p['op_exponent']
+            max_level= p['max_level']
+            regionbitparam = p['regionbitparam']
+            zeroregionbitparam = p['zeroregionbitparam']
+            report_interval_seconds = p['report_interval_seconds']
+            min_memGiB_required = p['min_memGiB_required']
+            p_verbose = p['verbose']
+
+    #* warn if the commandline value for verbose differs from the parameter file value for verbose        
+    if (verbose > 0):
+        if (verbose != p_verbose):
+            print("NOTE: This program uses commandline (verbose = %d) " %verbose)
+            print("      rather than the parameter file (verbose = %d)." %p_verbose)
+            print("      The verbose key is:  0=SILENT, 1=BASIC, 2=CHATTY, 3=DEBUG.")
+
+    #* initialize LARC
+    mypy.initialize_larc(matrix_exponent,op_exponent,max_level,regionbitparam,zeroregionbitparam,verbose)
 
 
-    #######################################
-    ##    Print baseline usage report    ##
-    #######################################
-    mypy.rusage_report(0, "stdout")
-
-
-    ####################################################################
-    ##    LARCt Initialization of Matrix Store and Operation Stores   ##
-    ####################################################################
-    ## The routine initialize_larc() does the following:              ##
-    ## * creates the matrix and op stores                             ##
-    ## * preloads matrix store with: standard scalars and gates,      ##
-    ##   and with all zero, identity, and (integer) Hadamard matrices ##
-    ##   left to max matrix size                                      ##
-    ####################################################################
-
-    ####################################################################
-    ##    Testing to see what approximation functions.
-    ##    The zerobit thresh parameters that work for F_3 are:
-    ##      -z 53 and smaller
-    ##    The zerobit thresh parameters that fail for F_3 are:
-    ##      -z 54 and larger  
-    ## 
-    ##    The rounding function does not effect whether it
-    ##    works in ranges -s 10 to -s 1000
-    ## 
-    ## 
-    ####################################################################
-
-    
-    ## SMALL STORES for working on desktop
-    if max_level <= 8:    
-        matrix_exponent = 22
-        op_exponent = 19   
-
-        trunc_to_zero_bits = 50
-    ##  trunc_to_zero_bits = 52
-    ##  trunc_to_zero_bits = 54
-    ##  rnd_sig_bits = 1000
-        rnd_sig_bits = 30
-
-        ######################################################
-        ##  Sample failure values for LARC approximation    ##
-        ##  are to set         rnd_sig_bits = 60            ##
-        ##  and                trunc_to_zero_bits = 60      ##
-        ######################################################
-        ##  Default values for LARC approximation are       ##
-        ##  both equal to DBL_MANT_DIG -2                   ##
-        ##  rnd_sig_bits = -1    # default is 53 bits       ##
-        ##  trunc_to_zero_bits = -1 # OLD default is 1074 bits  ##
-        ##  trunc_to_zero_bits = -1 # OLD default is 1074 bits  ##
-        ##  NOTE:  testing shows -z 47 will work            ##
-        ######################################################
-        # trunc_to_zero_bits = 52
-
-
-        ######################################################
-        ##  TODO: find out the space in which this test fails!!!
-        ##  DBL_MANT_DIG is the number of digits in FLT_MANT  ##
-        ##  why aren't we using DBL_MANT_BITS  ??????? the number of bits
-        ##  used in the mantissa
-        ######################################################
-        verbose = 1
-        mypy.initialize_larc(matrix_exponent,op_exponent,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
-        mypy.create_report_thread(180)
-        print_naive = 1
-        print_nonzeros = 1
-        print("Problem size is small enough to run on desktop")
-        if print_naive:
-           print("  will print files of naive matrices")
-        else: 
-           print("  not printing files of naive matrices")
-        if print_nonzeros:
-           print("  will print files of nonzero matrices\n")
-        else: 
-           print("  not printing files of nonzero matrices\n")
-    ## LARGE STORES for cs1l,cs4l,cs9l
-    else:      
-        ## matrix_exponent = 26
-        ## op_exponent = 24
-        matrix_exponent = 30
-        op_exponent = 31   
-        rnd_sig_bits = -1 # default value
-        trunc_to_zero_bits = -1 # default value
-        ## trunc_to_zero_bits = 20 # truncate to zero if value is less than 2**(-threshold)
-        ## trunc_to_zero_bits = 16 # truncate to zero if value is less than 2**(-threshold)
-        verbose = 0
-        mypy.initialize_larc(matrix_exponent,op_exponent,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
-        mypy.create_report_thread(3600)   # once per hour 3600
-        print_naive = 0      
-        print_nonzeros = 0
-        print("Problem size is NOT small enough to run on desktop")
-        if print_naive:
-           print("  WARNING: will try to print files of naive matrices!!!")
-        else: 
-           print("  not printing files of naive matrices")
-        if print_nonzeros:
-           print("  WARNING: will print files of nonzero matrices!!!\n")
-        else: 
-           print("  not printing files of nonzero matrices\n")
-
-    print("Finished creating LARC matrix and op stores and loading basic matrices.\n")
-    print("Seppuku check to see if program is to large to occur once every 10 minutes.\n")
-
-
-    #########################
+    #*#######################
     # print roots of unity  #
-    #########################
+    #*#######################
     # verbose = 0
     # n = 4
     # print("\nRunning code to produce the %d-th roots of unity." %n)
     # mypy.print_n_th_roots_of_unity(4,verbose)
     # # mypy.print_n_th_roots_of_unity(24,verbose)
 
-    ####################################################
-    # load principal root of unity and return matrixID #
-    ####################################################
+    #*##################################################
+    # load principal root of unity and return packedID #
+    #*##################################################
     # verbose = 0
-    # print("\nRunning code to produce the matrixID for the n-th principal root of unity.")
-    # p1_mID = mypy.principal_n_th_root_of_unity_matID(1, verbose)
-    # print("principal nth root of unity for n=1 has matrixID %d" %p1_mID)
-    # p2_mID = mypy.principal_n_th_root_of_unity_matID(2, verbose)
-    # print("principal nth root of unity for n=2 has matrixID %d" %p2_mID)
-    # p3_mID = mypy.principal_n_th_root_of_unity_matID(3, verbose)
-    # print("principal nth root of unity for n=3 has matrixID %d" %p3_mID)
-    # p4_mID = mypy.principal_n_th_root_of_unity_matID(4, verbose)
-    # print("principal nth root of unity for n=4 has matrixID %d" %p4_mID)
-    # # p24_mID = mypy.principal_n_th_root_of_unity_matID(24, verbose)
-    # # print("principal nth root of unity for n=24 has matrixID %d" %p24_mID)
+    # print("\nRunning code to produce the packedID for the n-th principal root of unity.")
+    # p1_pID = mypy.principal_n_th_root_of_unity_matID(1, verbose)
+    # print("principal nth root of unity for n=1 has packedID %d" %p1_pID)
+    # p2_pID = mypy.principal_n_th_root_of_unity_matID(2, verbose)
+    # print("principal nth root of unity for n=2 has packedID %d" %p2_pID)
+    # p3_pID = mypy.principal_n_th_root_of_unity_matID(3, verbose)
+    # print("principal nth root of unity for n=3 has packedID %d" %p3_pID)
+    # p4_pID = mypy.principal_n_th_root_of_unity_matID(4, verbose)
+    # print("principal nth root of unity for n=4 has packedID %d" %p4_pID)
+    # # p24_pID = mypy.principal_n_th_root_of_unity_matID(24, verbose)
+    # # print("principal nth root of unity for n=24 has packedID %d" %p24_pID)
 
 
-    #################################################################
-    # fill an array with the matrixIDs of the nth roots of unity   ##
-    # verbose = 0 is run quiet, verbose = 1 subroutines chatty, and  ##
-    # verbose = 2 both local and subroutine calls chatty as well.   ##
-    #################################################################
-    ## verbose = 2
+    #*###############################################################
+    # fill an array with the packedIDs of the nth roots of unity   #*
+    # verbose = 0 is run quiet, verbose = 1 subroutines chatty, and  #*
+    # verbose = 2 both local and subroutine calls chatty as well.   #*
+    #*###############################################################
+    #* verbose = 2
     verbose = 1
     if (verbose>1):
         call_verbose = 1
@@ -232,14 +210,14 @@ if __name__ == '__main__':
     print("within LARC as though they satisfy one or more identities.")
     print("For example, say you want multiplication to be closed for roots of unity.")
     print("This is equivalent to saying we want the function")
-    print("  matID = mypy.matrix_mult_matrixID(rootj_ID,rootk_ID)")
-    print("to return matID = root(j+k mod n)_ID.")     
+    print("  packedID = mypy.matrix_mult(rootj_ID,rootk_ID)")
+    print("to return packedID = root(j+k mod n)_ID.")     
     print("When you load a scalar immediately after initialization, it becomes the")
-    print("unique scalar value from its neighborhood in LARC unless it happens to")
-    print("lie in a neighborhood which already has a stored representative.")
+    print("unique scalar value from its LSH region in LARC unless it happens to")
+    print("lie in a region which already has a stored representative.")
     print("Two scalars that we care to differentiate should not end up in the same")
-    print("neighborbood of LARC.  You should test the identities that you care about,")
-    print("and if necessary, alter your neighborhood parameters to correct the")
+    print("LSH region of LARC.  You should test the identities that you care about,")
+    print("and if necessary, alter your hash parameters to correct the")
     print("situation.\n")
     user_input = input("Press return to see example.")
 
@@ -250,9 +228,9 @@ if __name__ == '__main__':
     if (verbose>1):
         print("The length of the array is %d" %len(n_array))
     for k in range(n):
-        n_array[k]  = mypy.k_th_power_of_n_th_root_of_unity_matID(k,n,call_verbose)
+        n_array[k]  = mypy.k_th_power_of_n_th_root_of_unity_pID(k,n,call_verbose)
     print("\nHere is the array of the LARC matrixIDs for the %dth roots of unity:" %n)   
-    print(n_array)
+    print(list(map(mypy.matrixID_from_packedID,n_array)))
     print(" ")
     user_input = input("Press return, then we will print the stored values.")
     
@@ -260,7 +238,7 @@ if __name__ == '__main__':
         print("\nThe stored values of these roots are:")
         print("")
         for k in range(n):
-           mypy.print_naive_by_matID(n_array[k])
+           mypy.print_naive(n_array[k])
 
 
     print("\nNow we verify that multiplication is closed and correct, by looking")
@@ -269,10 +247,10 @@ if __name__ == '__main__':
     success = 1
     for k in range(n):
         for j in range(k+1):
-            my_matrixID = mypy.matrix_mult_matrixID(n_array[j],n_array[k])
+            my_packedID = mypy.matrix_mult(n_array[j],n_array[k])
             flag = 0  # initialize as though there was a closure failure
             for i in range(n):
-                if (my_matrixID == n_array[i]):
+                if (my_packedID == n_array[i]):
                     flag = 1   # we found the matrixID of product in the preloaded roots
             if (flag == 0):
                 success = 0
@@ -280,9 +258,9 @@ if __name__ == '__main__':
                 print("since the product of the %d-th power and %d-th power" %(j,k,))
                 m = (j+k) % n
                 print("which should have been the %d-th power which had value" %m )
-                mypy.print_naive_by_matID(n_array[m])
+                mypy.print_naive(n_array[m])
 
-                print("The computed result has matrixID %g instead of %g" %(my_matrixID,
+                print("The computed result has matrixID %g instead of %g" %(mypy.matrixID_from_packedID(my_packedID),
                                                                             n_array[m]))
                 print("Which differs from the expected value by")
                 # complex_dif = 0.1 + I*0.0
@@ -292,12 +270,12 @@ if __name__ == '__main__':
         print("\nPassed test! All products of pairs of roots of unity produce existing roots.\n")
     else:
         print("\nFailed test! At least one product of roots of unity produced a value")
-        print("that was not a preloaded root of unity, so nbhd hash is not optimal.\n")
+        print("that was not a preloaded root of unity, so locality hash is not optimal.\n")
         
 
     # sys.exit(0)
 
-    ## OLDER VERSION OF CODE
+    #* OLDER VERSION OF CODE
     # verbose = 1
     # if (verbose>1):
     #     call_verbose = 1
@@ -309,7 +287,7 @@ if __name__ == '__main__':
     # if (verbose>1):
     #     print("The length of the array is %d" %len(n5_array))
     # for k in range(n):
-    #     n5_array[k]  = mypy.k_th_power_of_n_th_root_of_unity_matID(k,n,call_verbose)
+    #     n5_array[k]  = mypy.k_th_power_of_n_th_root_of_unity_pID(k,n,call_verbose)
     # print("\nHere is the array of matrixIDs of the %dth roots of unity:" %n)
     # print(n5_array)
     # if (verbose>1):
@@ -318,38 +296,38 @@ if __name__ == '__main__':
     #     for k in range(n):
     #        print("The matrixID is %d" %n5_array[k])
     #        print("The %d-th power of the %d-th root of unity is" %(k,n))
-    #        mypy.print_naive_by_matID(n5_array[k])
+    #        mypy.print_naive(n5_array[k])
     #        print("")
     # print("\nNow we can look to see if multiplication is closed, by looking")
     # print("at the matrixIDs of products of pairs of these roots.")
     # for k in range(n):
     #     for j in range(k+1):
-    #         my_matrixID = mypy.matrix_mult_matrixID(n5_array[j],n5_array[k])
+    #         my_matrixID = mypy.matrix_mult(n5_array[j],n5_array[k])
     #         print("The (%d,%d)th product has matrix ID" %(j,k))
     #         print(my_matrixID)
     # print("\n")
 
     # print("\nTODO: Fix these non desirable:")
     # print("\nFor n = 5 we see that the product of the 1st and 4th roots,")
-    # my_matrixID = mypy.matrix_mult_matrixID(n5_array[1],n5_array[4])
+    # my_matrixID = mypy.matrix_mult(n5_array[1],n5_array[4])
     # print("the (%d,%d)th product has matrix ID" %(1,4))
     # print(my_matrixID)
     # print("which has stored value")
-    # mypy.print_naive_by_matID(my_matrixID)
+    # mypy.print_naive(my_matrixID)
     # print("")
-    # print("Whereas if the nbhd hash was perfect we expected to see")
+    # print("Whereas if the locality hash was perfect we expected to see")
     # print(n5_array[0])
     # print("which has stored value")
-    # mypy.print_naive_by_matID(n5_array[0])
+    # mypy.print_naive(n5_array[0])
 
 
-    # mID = mypy.matrix_diff_matrixID(int64_t A_mID, int64_t B_mID)
-    # get numerical value mID
+    # pID = mypy.matrix_diff(int64_t A_pID, int64_t B_pID)
+    # get numerical value pID
     # if val
     # i = 1
     # while value > 1/(2^i)for i in 
     #     see if the value is < 
-    #         my_matrixID = mypy.matrix_mult_matrixID(n5_array[j],n5_array[k])
+    #         my_matrixID = mypy.matrix_mult(n5_array[j],n5_array[k])
     #         print("The (%d,%d)th product has matrix ID" %(j,k))
     #         print(my_matrixID)
     # print("\n")

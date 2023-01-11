@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -61,6 +62,15 @@ import MyPyLARC as mypy
 import numpy as np
 from ctypes import *
 
+
+##
+# \file test_kronecker.py
+#
+# \brief This program creates kronecker products of various combinations of 
+# matrices, row vectors, and column vectors.
+#
+
+
 if __name__ == '__main__':
 	# This version references matrices by matrixID instead of pointers
 	
@@ -70,11 +80,11 @@ if __name__ == '__main__':
     mat_store_exp = 26
     op_store_exp = 24
     max_level = 10
-    rnd_sig_bits = -1   # default value
-    trunc_to_zero_bits = -1  # default value
+    regionbitparam = -1   # default value
+    zeroregionbitparam = -1  # default value
     mypy.create_report_thread(1800)
     verbose = 1
-    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
+    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,regionbitparam,zeroregionbitparam,verbose)
 
 
     # In the Makefile you can compile with different scalarType values
@@ -88,24 +98,18 @@ if __name__ == '__main__':
     if scalarTypeStr in ('Integer', 'MPInteger'):
         a = np.matrix([[1, 2, 3, 4],[5, 6, 7, 8]])
         b = np.matrix([[9, 10, 11, 12]])
-#        a = np.matrix([[1, 3, 5, 6],
-#                       [8, 6, 3, 1],
-#                       [-9, 11, 13, 15],
-#                       [16, 13, 12, 10]])
+    elif scalarTypeStr == 'Boolean':
+        a = np.matrix([[1, 0, 1, 0],[0, 1, 1, 1]])
+        b = np.matrix([[0, 1, 1, 0]])
     elif scalarTypeStr in ('Complex', 'MPComplex', 'MPRatComplex'):
         a = np.matrix([[1+2j, 2+3j, 3+4j, 4+5j],[5+1j, 6+2j, 7+3j, 8+4j]])
         b = np.matrix([[9-1j, 10-2j, 11-3j, 12-4j]])
-#        a = np.matrix([[1+2j, 3+4j, 5+6j, 7+8j],
-#                       [8+7j, 6+5j, 3+4j, 1+2j],
-#                       [9+10j, 11+12j, 13+14j, 15+16j],
-#                       [16+15j, 14+13j, 12+11j, 10+9j]])
-    elif scalarTypeStr in ('Real', 'MPReal', 'MPRational'):
+    elif scalarTypeStr in ('Real', 'MPReal', 'MPRational', 'Clifford'):
         a = np.matrix([[1, 2, 3, 4],[5, 6, 7, 8]])
         b = np.matrix([[9, 10, 11, 12]])
-#        a = np.matrix([[1, 3, .5, 6],
-#                       [8, 6, 3, .1],
-#                       [-9, 11, 13, 1.5],
-#                       [16, 13, 12, 10]])
+    elif scalarTypeStr in ('Upper', 'Lower'):
+        a = np.matrix([[0.1, 0.2, 0.3, 0.4],[0.5, 0.6, 0.7, 0.8]])
+        b = np.matrix([[0.9, 0.10, 0.11, 0.12]])
     else:
         raise Exception('Do not know how to build matrix for type %s.' %scalarTypeStr)
 
@@ -117,8 +121,8 @@ if __name__ == '__main__':
     print('array A:', aarr)
 
     # creating or finding the matrix associated with the array
-    serial_a = mypy.row_major_list_to_store_matrixID(aarr, 3, 0, 1)
-    mypy.print_naive_by_matID(serial_a)
+    serial_a = mypy.row_major_list_to_store(aarr, 3, 0, 1)
+    mypy.print_naive(serial_a)
     print("\n")
 
     # turn the matrix into an array by reading off each row in turn (row major format)
@@ -128,18 +132,18 @@ if __name__ == '__main__':
     print('array B:', barr)
 
     # creating or finding the matrix associated with the array
-    serial_b = mypy.row_major_list_to_store_matrixID(barr, 2, 0, 1)
-    mypy.print_naive_by_matID(serial_b)
+    serial_b = mypy.row_major_list_to_store(barr, 2, 0, 1)
+    mypy.print_naive(serial_b)
     print("\n")
 
     print("kronecker product A \otimes B:")
-    serial_c = mypy.kronecker_product_matrixID(serial_a,serial_b)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_a,serial_b)
+    mypy.print_naive(serial_c)
     print("\n")
 
     print("kronecker product B \otimes A:")
-    serial_c = mypy.kronecker_product_matrixID(serial_b,serial_a)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_b,serial_a)
+    mypy.print_naive(serial_c)
     print("\n")
 
     print("ROW_COLUMN CASE")
@@ -150,8 +154,8 @@ if __name__ == '__main__':
     print('array A:', aarr)
 
     # creating or finding the matrix associated with the array
-    serial_a = mypy.row_major_list_to_store_matrixID(aarr, 0, 3, 8)
-    mypy.print_naive_by_matID(serial_a)
+    serial_a = mypy.row_major_list_to_store(aarr, 0, 3, 8)
+    mypy.print_naive(serial_a)
     print("\n")
 
     # turn the matrix into an array by reading off each row in turn (row major format)
@@ -161,13 +165,13 @@ if __name__ == '__main__':
     print('array B:', barr)
 
     # creating or finding the matrix associated with the array
-    serial_b = mypy.row_major_list_to_store_matrixID(barr, 2, 0, 1)
-    mypy.print_naive_by_matID(serial_b)
+    serial_b = mypy.row_major_list_to_store(barr, 2, 0, 1)
+    mypy.print_naive(serial_b)
     print("\n")
 
     print("kronecker product A \otimes B:")
-    serial_c = mypy.kronecker_product_matrixID(serial_a,serial_b)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_a,serial_b)
+    mypy.print_naive(serial_c)
     print("\n")
 
     print("COLUMN_ROW CASE")
@@ -178,8 +182,8 @@ if __name__ == '__main__':
     print('array A:', aarr)
 
     # creating or finding the matrix associated with the array
-    serial_a = mypy.row_major_list_to_store_matrixID(aarr, 3, 0, 1)
-    mypy.print_naive_by_matID(serial_a)
+    serial_a = mypy.row_major_list_to_store(aarr, 3, 0, 1)
+    mypy.print_naive(serial_a)
     print("\n")
 
     # turn the matrix into an array by reading off each row in turn (row major format)
@@ -189,13 +193,13 @@ if __name__ == '__main__':
     print('array B:', barr)
 
     # creating or finding the matrix associated with the array
-    serial_b = mypy.row_major_list_to_store_matrixID(barr, 0, 2, 4)
-    mypy.print_naive_by_matID(serial_b)
+    serial_b = mypy.row_major_list_to_store(barr, 0, 2, 4)
+    mypy.print_naive(serial_b)
     print("\n")
 
     print("kronecker product A \otimes B:")
-    serial_c = mypy.kronecker_product_matrixID(serial_a,serial_b)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_a,serial_b)
+    mypy.print_naive(serial_c)
     print("\n")
 
     print("ROW_ROW CASE")
@@ -206,8 +210,8 @@ if __name__ == '__main__':
     print('array A:', aarr)
 
     # creating or finding the matrix associated with the array
-    serial_a = mypy.row_major_list_to_store_matrixID(aarr, 0, 3, 8)
-    mypy.print_naive_by_matID(serial_a)
+    serial_a = mypy.row_major_list_to_store(aarr, 0, 3, 8)
+    mypy.print_naive(serial_a)
     print("\n")
 
     # turn the matrix into an array by reading off each row in turn (row major format)
@@ -217,18 +221,18 @@ if __name__ == '__main__':
     print('array B:', barr)
 
     # creating or finding the matrix associated with the array
-    serial_b = mypy.row_major_list_to_store_matrixID(barr, 0, 2, 4)
-    mypy.print_naive_by_matID(serial_b)
+    serial_b = mypy.row_major_list_to_store(barr, 0, 2, 4)
+    mypy.print_naive(serial_b)
     print("\n")
 
     print("kronecker product A \otimes B:")
-    serial_c = mypy.kronecker_product_matrixID(serial_a,serial_b)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_a,serial_b)
+    mypy.print_naive(serial_c)
     print("\n")
 
     print("kronecker product B \otimes A:")
-    serial_c = mypy.kronecker_product_matrixID(serial_b,serial_a)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_b,serial_a)
+    mypy.print_naive(serial_c)
     print("\n")
 
     print("MATRIX_ROW CASE")
@@ -239,8 +243,8 @@ if __name__ == '__main__':
     print('array A:', aarr)
 
     # creating or finding the matrix associated with the array
-    serial_a = mypy.row_major_list_to_store_matrixID(aarr, 1, 2, 4)
-    mypy.print_naive_by_matID(serial_a)
+    serial_a = mypy.row_major_list_to_store(aarr, 1, 2, 4)
+    mypy.print_naive(serial_a)
     print("\n")
 
     # turn the matrix into an array by reading off each row in turn (row major format)
@@ -250,13 +254,13 @@ if __name__ == '__main__':
     print('array B:', barr)
 
     # creating or finding the matrix associated with the array
-    serial_b = mypy.row_major_list_to_store_matrixID(barr, 0, 2, 4)
-    mypy.print_naive_by_matID(serial_b)
+    serial_b = mypy.row_major_list_to_store(barr, 0, 2, 4)
+    mypy.print_naive(serial_b)
     print("\n")
 
     print("kronecker product A \otimes B:")
-    serial_c = mypy.kronecker_product_matrixID(serial_a,serial_b)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_a,serial_b)
+    mypy.print_naive(serial_c)
     print("\n")
 
     print("MATRIX_COLUMN CASE")
@@ -267,8 +271,8 @@ if __name__ == '__main__':
     print('array A:', aarr)
 
     # creating or finding the matrix associated with the array
-    serial_a = mypy.row_major_list_to_store_matrixID(aarr, 1, 2, 4)
-    mypy.print_naive_by_matID(serial_a)
+    serial_a = mypy.row_major_list_to_store(aarr, 1, 2, 4)
+    mypy.print_naive(serial_a)
     print("\n")
 
     # turn the matrix into an array by reading off each row in turn (row major format)
@@ -278,13 +282,13 @@ if __name__ == '__main__':
     print('array B:', barr)
 
     # creating or finding the matrix associated with the array
-    serial_b = mypy.row_major_list_to_store_matrixID(barr, 2, 0, 1)
-    mypy.print_naive_by_matID(serial_b)
+    serial_b = mypy.row_major_list_to_store(barr, 2, 0, 1)
+    mypy.print_naive(serial_b)
     print("\n")
 
     print("kronecker product A \otimes B:")
-    serial_c = mypy.kronecker_product_matrixID(serial_a,serial_b)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_a,serial_b)
+    mypy.print_naive(serial_c)
     print("\n")
 
     print("ROW_MATRIX CASE")
@@ -295,8 +299,8 @@ if __name__ == '__main__':
     print('array A:', aarr)
 
     # creating or finding the matrix associated with the array
-    serial_a = mypy.row_major_list_to_store_matrixID(aarr, 1, 2, 4)
-    mypy.print_naive_by_matID(serial_a)
+    serial_a = mypy.row_major_list_to_store(aarr, 1, 2, 4)
+    mypy.print_naive(serial_a)
     print("\n")
 
     # turn the matrix into an array by reading off each row in turn (row major format)
@@ -306,13 +310,13 @@ if __name__ == '__main__':
     print('array B:', barr)
 
     # creating or finding the matrix associated with the array
-    serial_b = mypy.row_major_list_to_store_matrixID(barr, 0, 2, 4)
-    mypy.print_naive_by_matID(serial_b)
+    serial_b = mypy.row_major_list_to_store(barr, 0, 2, 4)
+    mypy.print_naive(serial_b)
     print("\n")
 
     print("kronecker product B \otimes A:")
-    serial_c = mypy.kronecker_product_matrixID(serial_b,serial_a)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_b,serial_a)
+    mypy.print_naive(serial_c)
     print("\n")
 
     print("COLUMN_MATRIX CASE")
@@ -323,8 +327,8 @@ if __name__ == '__main__':
     print('array A:', aarr)
 
     # creating or finding the matrix associated with the array
-    serial_a = mypy.row_major_list_to_store_matrixID(aarr, 1, 2, 4)
-    mypy.print_naive_by_matID(serial_a)
+    serial_a = mypy.row_major_list_to_store(aarr, 1, 2, 4)
+    mypy.print_naive(serial_a)
     print("\n")
 
     # turn the matrix into an array by reading off each row in turn (row major format)
@@ -334,11 +338,11 @@ if __name__ == '__main__':
     print('array B:', barr)
 
     # creating or finding the matrix associated with the array
-    serial_b = mypy.row_major_list_to_store_matrixID(barr, 2, 0, 1)
-    mypy.print_naive_by_matID(serial_b)
+    serial_b = mypy.row_major_list_to_store(barr, 2, 0, 1)
+    mypy.print_naive(serial_b)
     print("\n")
 
     print("kronecker product B \otimes A:")
-    serial_c = mypy.kronecker_product_matrixID(serial_b,serial_a)
-    mypy.print_naive_by_matID(serial_c)
+    serial_c = mypy.kronecker_product(serial_b,serial_a)
+    mypy.print_naive(serial_c)
     print("\n")

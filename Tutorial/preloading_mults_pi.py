@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -64,72 +65,85 @@ import MyPyLARC as mypy
 from ctypes import *
 
 
+##
+# \file preloading_mults_pi.py
+#
+# \brief This routine illustrates the way that
+# region size for the locality hash
+# is used by LARC to minimize the number of scalars
+# that are creating by representing any scalar
+# in a small region by a single representative.
+
+
 if __name__ == '__main__':
 
 
     if 3 == len(sys.argv):
         # sys.path.append(sys.argv[1])
         # sys.argv = [sys.argv[0]]
-        rnd_sig_bits = int(sys.argv[1]) 
+        regionbitparam = int(sys.argv[1]) 
         num_mults = int(sys.argv[2])    
 
 
     else:
         print("This program needs two integer inputs: r n")
-        print("   r:  the size of neighborhoods is 2^(-r)")
+        print("   r:  the size of locality hash regions is 2^(-r)")
         print("   n:  the test is run for i*pi for i=1 to n")
         print("Sample Usage:")
         print("   python3 preloading_mults_pi.py 5 6\n")
         sys.exit()    
 
 
-    #######################################
-    ##    Print baseline usage report    ##
-    #######################################
-    # mypy.rusage_report(0, "stdout")
+    #*#####################################
+    #*    Print baseline usage report    ##
+    #*#####################################
+    # mypy.memory_and_time_report(0, "stdout")
         
 
-    ####################################################################
-    ##    LARCt Initialization of Matrix Store and Operation Stores   ##
-    ####################################################################
-    ## The routine initialize_larc() does the following:              ##
-    ## * creates the matrix and op stores                             ##
-    ## * preloads matrix store with: standard scalars and gates,      ##
-    ##   and with all zero, identity, and (integer) Hadamard matrices ##
-    ##   left to max matrix size                                      ##
-    ####################################################################
+    #*##################################################################
+    #*    LARC  Initialization of Matrix Store and Operation Stores   ##
+    #*##################################################################
+    #* The routine initialize_larc() does the following:              ##
+    #* * creates the matrix and op stores                             ##
+    #* * preloads matrix store with: standard scalars and gates,      ##
+    #*   and with all zero, identity, and (integer) Hadamard matrices ##
+    #*   left to max matrix size                                      ##
+    #*##################################################################
     max_level = 8     
     matrix_exponent = 22
     op_exponent = 19   
-    trunc_to_zero_bits = 50
-    # rnd_sig_bits = 30
+    zeroregionbitparam = 50
+    # regionbitparam = 30
     verbose = 0
-    mypy.initialize_larc(matrix_exponent,op_exponent,max_level,rnd_sig_bits,
-                         trunc_to_zero_bits,verbose)
+    mypy.initialize_larc(matrix_exponent,op_exponent,max_level,regionbitparam,
+                         zeroregionbitparam,verbose)
     # mypy.create_report_thread(180)
 
     print("\nFinished creating LARC matrix and op stores and loading basic matrices.")
-    # print("Seppuku check to see if program is to large to occur once every 10 minutes.")
+    # print("stopHogging check to see if program is too large to occur once every 10 minutes.")
     print("\n***************************************")
 
-    #####################
+    #*###################
     # see the code in roots of unity and in fft for other cases which can fail
-    # with some values of rnd_sig_bits and trunc_to_zero_bits
-    #############
+    # with some values of regionbitparam and zeroregionbitparam
+    #*###########
 
-    ##  FIND out type being used
+    #*  FIND out type being used
     scalarTypeStr = mypy.cvar.scalarTypeStr
 
     if ((scalarTypeStr == "Complex") or (scalarTypeStr == "MPRatComplex")):
         var_pi = complex(numpy.pi ,0)
+    elif ((scalarTypeStr == "Integer") or (scalarTypeStr == "MPInteger")):
+        print("cannot have pi in an integer type!")
+        sys.exit()
     else:
         var_pi = numpy.pi
     print("\nUsing numpy.pi we find that pi is")
     print(var_pi)
 
-    matpiID = mypy.get_valID_from_valString(mypy.value_to_string(var_pi,scalarTypeStr))
+    matpi_pID = mypy.get_valID_from_valString(mypy.value_to_string(var_pi,scalarTypeStr))
     print("\nWe have loaded pi into the matrix store and it has matrixID")
-    print(matpiID)
+    print(mypy.matrixID_from_packedID(matpi_pID))
 
     # var_2pi = complex(2*numpy.pi ,0)
     # var_2pi = 2*numpy.pi
@@ -140,20 +154,20 @@ if __name__ == '__main__':
     # print("We have loaded pi into the matrix store and it has matrixID")
     # print(mat2piID)
     #
-    # matIDtwicepi = mypy.matrix_add_matrixID(matpiID,matpiID)
+    # pIDtwicepi = mypy.matrix_add(matpi_pID,matpi_pID)
     # print("We retrieved pi in python with numpy")
-    # print("We loaded this value into the larc matrix store and it had matrixID matpiID")
-    # print("We asked LARC to add the scalar values of two copies of the given matpiID")
+    # print("We loaded this value into the larc matrix store and it had matrixID matpi_pID")
+    # print("We asked LARC to add the scalar values of two copies of the given matpi_pID")
     # print("LARC returned to us the matrixID")
-    # print(matIDtwicepi)
+    # print(mypy.matrixID_from_packedID(pIDtwicepi))
 
     n = num_mults
 
-    print("\nCreating array int_matID[i] of matrixIDs for i for i=0 to n=%d" %n)
-    int_matID = [0]*(n+1)
+    print("\nCreating array int_pID[i] of matrixIDs for i for i=0 to n=%d" %n)
+    int_pID = [0]*(n+1)
     for k in range(n+1):
-        int_matID[k] = mypy.get_valID_from_valString(mypy.value_to_string(k,scalarTypeStr))
-    print(int_matID)   
+        int_pID[k] = mypy.get_valID_from_valString(mypy.value_to_string(k,scalarTypeStr))
+    print(list(map(mypy.matrixID_from_packedID,int_pID)))
 
     print("\nCreating array python_pi_i in python of pi*i.")
     python_pi_i = [0]*(n+1)
@@ -161,27 +175,27 @@ if __name__ == '__main__':
         python_pi_i[k] = var_pi * k
     print(python_pi_i)   
 
-    print("\nCreating array python_pi_i_matID of matrixIDs for pi*i.")
-    python_pi_i_matID = [0]*(n+1)
+    print("\nCreating array python_pi_i_pID of matrixIDs for pi*i.")
+    python_pi_i_pID = [0]*(n+1)
     for k in range(n+1):
-        python_pi_i_matID[k] = mypy.get_valID_from_valString(mypy.value_to_string(
+        python_pi_i_pID[k] = mypy.get_valID_from_valString(mypy.value_to_string(
             python_pi_i[k],scalarTypeStr))
-    print(python_pi_i_matID)   
+    print(list(map(mypy.matrixID_from_packedID,python_pi_i_pID)))
 
-    print("\nCalculating larc_pi_i_matID[k] = mat_mult(int_matID[k],python_pi_i_matID).")
-    larc_pi_i_matID = [0]*(n+1)
+    print("\nCalculating larc_pi_i_pID[k] = mat_mult(int_pID[k],python_pi_i_pID).")
+    larc_pi_i_pID = [0]*(n+1)
     for k in range(n+1):
-        larc_pi_i_matID[k] = mypy.matrix_mult_matrixID(int_matID[k],python_pi_i_matID[1])
-    print(larc_pi_i_matID)   
+        larc_pi_i_pID[k] = mypy.matrix_mult(int_pID[k],python_pi_i_pID[1])
+    print(list(map(mypy.matrixID_from_packedID,larc_pi_i_pID)))
 
     # user_input = input("Press Enter-key to continue.")
     print("\nRetrieving associated scalars from matrix store.")
     larc_pi_i_val = [0]*(n+1)
     for k in range(n+1):
-        larc_pi_i_val[k] = mypy.get_valString_from_matID_and_coords(larc_pi_i_matID[k],0,0)
+        larc_pi_i_val[k] = mypy.get_readableString_scalar_from_pID_and_coords(larc_pi_i_pID[k],0,0)
     print(larc_pi_i_val)
 
-    if (python_pi_i_matID == larc_pi_i_matID):
+    if (python_pi_i_pID == larc_pi_i_pID):
         print("\nBoth calculations produce the same matrixIDs.")
         print("If you would like to see a case where matrixIDs differ try the parameters 1 5.")
     else:
@@ -192,4 +206,4 @@ if __name__ == '__main__':
     print("still be a problem.  Try parameters 5 and 22 and you will notice that")
     print("larc tries to store 7*pi (= 21.9911485751) it returns the matrixID") 
     print("previously stored for the integer 22 since these fall in the same")
-    print("neighborhood.  This can cause future inaccuracies in calculations.\n")
+    print("locality hash region.  This can cause future inaccuracies in calculations.\n")

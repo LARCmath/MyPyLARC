@@ -1,0 +1,145 @@
+Power Method Implementation
+---------------------------
+The routine power_method.py creates a random real symmetric
+matrix M and a starting vector then uses the power method to
+find the largest magnitude eigenvalue of M and its associated
+eigenvector. The fourth commandline parameter determines
+whether the eigenvalues are known in advance or random.
+
+Example:
+The subdirectory physics_work contains several python programs
+which create a potential energy surface and then find the
+quantum mechanical ground state solution to the Schroedinger
+equation using the power method.
+
+
+Hybrid Lanczos Method Research
+------------------------------
+We are interested in testing to see whether LARC can
+work more efficiently on a hybrid Lanczos - power
+method than with the vanilla power method.  Here
+are some thoughts on implementation and possible
+experiments to try.
+
+Reference:
+  James Demmel  Applied Numerical Linear Algebra
+  SIAM,  1997
+
+The following is a more concrete description of experiments for
+exploring a Hybrid Krylov-subspace-Power method
+
+See questions at the bottom asking how a new user would find desired
+subroutines to perform these experiments.
+
+Is there any advice for which operations should be done in C, Python,
+or LARC.  (For instance the method forms a sequence of small matrices
+to pass to the Power method.  Should these matrices be formed in
+native LARC?, in Python / numpy? in C?
+
+=========================================================
+Reference Demmel page 375
+
+
+Lanczos Algorithm with No Orthogonalization
+
+1) Check A = A^T  (an n by n matrix)
+
+2) Choose b a random n-long vector
+
+3) Normalize b with euclidean 2-norm   q_1 = b / ||b||_2
+
+   and initialize vector q_0 = (0,0, ... 0)  and scalar c_0 = 0;
+
+4) for j = 1 to k
+
+5)     z = A q_j     Matrix vector multiply
+
+6)     d_j = q_j^T z  Dot product producing a scalar
+
+7)     modify to remove component in the direction of the previous
+       two q's
+       z = (z - (d_j . q_j))  - (c_{j-1} . q_{j-1})
+                    Scalar times vector, vector subtraction
+
+8)     c_j = ||z||_2   (prepare to normalize)
+
+9)     if c_j = 0 , then quit
+
+10)    else q_{j+1} = z / c_j  (normalize)
+
+11) End for j = 1 to k loop
+
+12) Form k by k matrix T_k
+
+    T_k =
+
+     d_1 c_1  0   0   0     ...   0      0      0
+     c_1 d_2 c_2  0   0     ...   0      0      0
+      0  c_2 d_3 c_3  0           0      0      0
+      0   0  c_3 d_4 c_4          0      0      0
+      .   .       .   .   .              .      .
+      .   .           .   .   .          .      .
+      .   .               .   .   .      .      .
+      0   0                  c_{k-2} d_{k-1} c_{k-1} 
+      0   0                          c_{k-1}  d_k
+
+Use the Power method on this much smaller matrix
+to find a good approximation to its maximum eigenvalue.
+
+In order to verify how good this method is compared
+to the standard power method we should try
+comparing this maximum eigenvalue of T_k
+with the largest eigenvalue of the original A matrix as
+found by the power method on the larger matrix.
+
+Do this for various sizes of n and k
+Do this for various eigen gaps between the top two eigenvalues.
+
+============================================================
+
+First questions:
+
+    Which of the operations above should be done in LARC, C, Python?
+
+    If all LARC then
+       How easy is it for a new user to find routines that
+           Check that A=A^T
+           form a random n-vector
+  find the norm of a vector
+  matrix vector multiply returning vector
+  Vector-vector dot product
+           scalar times vector
+  vector vector subtraction
+           Form a k by k matrix
+  Append a row and column to a k by k matrix
+                   to make a k+1 by k+1 matrix.
+
+One could imagine going from a k by k matrix
+                         to a 2k by 2k matrix.
+
+A question for experimentation is to assess whether
+the extra work is worthwhile.
+
+---------------------------------------------------
+There is a version of Lanczos called Lanczos with
+full orthogonalization (Page 375 of Demmel)
+
+where line 7 above is replaced with a loop of
+orthogonalizations against previous q vectors:
+
+7)    remove the component in the direction of all
+      all the previous q's
+      for i = 1 to j    z = z - (z^T q_i) q_i
+
+NOTE: We saw one application where they repeat
+      this step (7) twice in order to remove any
+      noise that creeped in during the first pass.
+
+This greater amount of work is supposed to better
+stabilize the algorithm and provide better accuracy.
+
+One could repeat the experiments above for various
+values of n and k and eigengap.
+
+
+

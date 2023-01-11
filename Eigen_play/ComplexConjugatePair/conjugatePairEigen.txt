@@ -1,0 +1,770 @@
+Richard Bates has been working out the details of recovering the
+pair of eigenvectors associated with a pair of complex conjugate
+eigenvalues with the maximum norm when completing a power method
+calculation.
+
+
+---------- Forwarded message ---------
+From: Richard Bates 
+Date: Wed, Apr 15, 2020 at 1:51 PM
+Subject: Re: eigenval and eigenvec recovery in complex conjugate case
+
+
+Hi all,
+
+Attached is the a copy of what follows in the body of the email.
+Cheers, Richard
+===================
+
+     The following begins with a further expansion of the comments
+made by phone yesterday on the eigenvalue-eigenvector power method
+recovery for the a top pair of conjugate eigenvalues with their
+associated eigenvectors.
+
+SC: suggestion,  and Mathematica helped find a solution.
+
+     The first comment regarded the power method's need to normalize to 1
+whatever first component of the eigenvectors is attacked - and thus
+the need to choose that first component as one for which the norms are
+not headed geometrically toward zero.
+
+     The next comments notes that the example below is only two
+dimensional but how it is clear what will be required in the
+higher dimensional cases.
+
+     Following this is the two dimensional example itself worked
+out in almost all its detail. Jenny should examine it to see if
+it meets her desire for a non-orthogonal case.
+
+     Following that is a repetition of the formulae recovered
+from mathematica that will have to be instantiated in our program.
+====================
+SOME GENERAL COMMENTS
+==================================================
+     The recovery below requires that the first component of the
+eigenvector pair be normalized to 1. A number of applications,
+however, are structurally sparse - and picking a component at random
+as the first component of interest may result in picking a component
+that has only contribution from the lesser eigenvalues. In such a case
+the method will fail. Thus it makes sense to track the maximum
+observed component in the vector and to pick that one after
+convergence as the first component to normalize to 1.
+
+     After the first component of the eigenvectors normalization
+to one enables the recovery of the  mixture coeffiecients for the
+eigenvectors, all the remaining components of the eigenvectors
+can be recovered one-by-one.  (The example below is for a two by
+two matrix and so there is only one more component to recover.)
+
+     In the case where the maximum norm eigenvalue is a single real
+value it is standard to use the eventual stationarity of the renormed
+iterate as the stopping criterion.  However in the case of a maximal
+pair of conjugate eigenvalues, after the effects of the lesser
+eigenvalues die away, the iterate continues to rotate. (Think
+oscilation in a photon wave trading energy back and forth between the
+electric and magnetic fields.) What should converge (needing a proof)
+is the recovery of the norm of the eigenvalue pair from three
+successive iterates.  What this would mean would be that as one
+iterates, with successive normalizations of the maximal component, one
+keeps track of a history of the previous three normalizations and at
+regular intervals one uses the equations below to recover the
+eigenvalues from three successive observations. At the point at which
+the eigenvalue norm stabalizes one then proceeds to recover the
+remainder of the eigen-information.
+
+     (The example below is only two dimensional and so the initial
+vector is automatically in the eigenspace of the top eigenvalue pair
+and so no further convergence is required and the recoveries can begin
+immediately from the initial vector and two more iterates.)
+
+========================================
+A TWO DIMENSIONAL NON-ORTHOGONAL EXAMPLE
+==================================================
+
+     This is an eigenvalue-eigenvector recovery for a second example
+as requested by Jenny where eigenvalues are nonorthogonal and the
+eigenvectors and the initial value are mutually non-orthogonal.
+
+     After choosing a pair of non-orthogonal conjugate eigenvalues,
+\lambda_1 and lambda_2 as respectively, (1+(i/2)) and (1-(i/2)), the
+equations that govern the way associated eigenvectors will combine
+with these eigenvalues to make a real matrix lead to the construction
+of a two parameter family of real valued matrices M with associated
+eigenvectors, v1 and v2.
+
+               M             =              
+
+    1+(s/2t)       -1/(2t)   =  
+((s^2)+(t^2))/2t   1-(s/2t)
+
+
+
+   =   P                 D                    p^-1
+
+   =   1       1         1+(i/2)    0         1/2 -is/(2t)    i/(2t)
+       s-it  s+it          0     1-(i/2)      1/2 +is/(2t)   -i/(2t)
+
+   =  (v1  ,  v2)     Diag(\lambda_1,\lambda_2     (v1   ,  v2)^{-1}
+
+
+     Choosing s=1 and t=(1/3) give the following constructed non
+orthogonal eigenvector and matrix information - and the question will
+be whether the information from 3 consecutive powers of M (M^0,M^1 and
+M^2) can recover this constructed eigen-information for matrix M,
+where the eigenvectors form the columns of P and the associated
+eigenvalues form the diagonal of D.
+
+M             =   P                   D                   p^-1
+
+15/6   -9/6   =     1      1         1+(i/2)    0       1/2-(i3/2)   i3/2
+10/6   -3/6      1-(i/3) 1+(i/3)       0     1-(i/2)    1/2+(i3/2)  -i3/2
+
+              =  (v1  ,  v2)   Diag(\lambda_1,\lambda_2  (v1   ,  v2)^{-1}
+
+Recall from a previous email's analysis of the mathematica-based
+solution, that the initial iterate must contain a complex component
+for the process to avoid a zero divisor to succeed.
+
+Thus for this demonstrative example we have chosen
+y_1 =
+  1  
+  1   +  i
+
+givivg y_2 = M y_1 =
+  1   - (i 3/2)
+ 7/6  - (i 1/2)
+
+and y_3 = M y_2 =
+ 3/4  - (i 3)
+13/12 - (i 9/4).
+
+Recall from the previous analysis that we wish first to focus, one at
+a time, on the components of the three observed vectors above to give
+six observables, (a_k, i b_k) for k = 1,2,3, (three imaginary and
+three real) that will enable us to solve six nonlinear equations
+
+  r1 Cos[(w1)] + r2 Cos[(w2)] == a1 ,
+  r1 Sin[(w1)] + r2 Sin[(w2)] == b1 ,
+  r0 r1 Cos[(w1 + u0)] + r0 r2 Cos[(w2 - u0)] == a2 ,
+  r0 r1 Sin[(w1 + u0)] + r0 r2 Sin[(w2 - u0)] == b2 ,
+  ((r0)^2) r1 Cos[(w1 + 2 u0)] + ((r0)^2) r2 Cos[(w2 - 2 u0)] == a3 ,
+  ((r0)^2) r1 Sin[(w1 + 2 u0)] + ((r0)^2) r2 Sin[(w2 - 2 u0)] == b3 ,
+
+where the r0 and u_0 are from the eigenvalues written as
+   {\lambda}_1 = r0 e^{i u_0} and
+   {\lambda}_2 = r0 e^{-i u_0}
+
+and the remaining four variables come from the interplay between the
+mixture coefficient norms and angles, present at the converged y_1,
+and the eigenvector component norms and angles:
+
+The following is a brief review of the derivation of the above six
+nonlinear equations.
+
+Recall that y_1 after the convergence to the v_1,v_2 eigenspace is in
+the span of v_1 and v_2 and can be written
+     y_1 = \alpha_1 v_1 + \alpha2 v_2.
+Suppose that the mixture coefficients are written as
+     \alpha_1 =  p_1 e^i{\theta}_1
+and  \alpha_2 =  p_2 e^i{\theta}_2.
+If z_1 is the (first) component of interest in y_1 and if the (first)
+component of interest in each of the vector v_1 and v_2 is written
+respectively as
+     u_1 = s_1 e^{i {\phi}_1},
+     u_2 = s_2 e^{i {\phi}_2},
+then the interplay between the mixture coefficients and the first
+component of the eigenvector gives the first component z_1 of the
+vector y_1 as
+     z_1 = r1 e^{i w_1) + r2 e^{i w2} = a1 + i b1
+where
+     r_1 = p_1 s_1 ,
+     r_2 = p_2 s_2 ,
+     w_1 = {\theta}_1 + {\phi}_1 , and
+     w_2 = {\theta}_2 + {\phi}_2 .
+
+Furthermore,if z_2 is the (first) component of interest in y_2 = M y_1
+then the action of
+{\lambda}_1 = r0 e^{i u_0}  on v_1 and
+{\lambda}_2 = r0 e^{-i u_0} on v_2
+gives
+  z_2 = r0 r1 e^{i (w_1 + u_0)} + r0 r2 e^{i (w_2 - u_0)} = a2 + i b2.
+ 
+If z_3 is the (first) component of interest in y_3 = M y_2 then the action of
+{\lambda}_1 = r0 e^{i u_0} on v_1 and {\lambda}_2 = r0 e^{-i u_0} on v_2
+gives
+  z_3 = (r0^2)r1 e^{i (w_1 + 2 u_0)} + (r0^2) r2 e^{i (w_2 - u_0)} = a3 + i b3.
+ 
+Recalling that e^{ix} = cos[x] + i sin[x] and separating the real and
+imaginary parts gives the six nonlinear equations above.
+This completes the rederivation of the six nonlinear equations above.
+
+For the example matrix above and starting with y_1 as the converged
+vector, the first components of y_1, y_2, and y_3 give the observable
+values of the real and imaginary parts
+
+  a_1 = 1; b_1 = 0; a_2 = 1; b_2 = -3/2; a_3 = 3/4; b_3 = -3.
+
+The second components of y_1, y_2, and y_3 will later give the
+observables for a second set of equations as
+
+  a'_1 = 1;  b'_1 = 1;  a'_2 = 7/6;  b'_2 = -1/2;  a'_3 = 13/12;  b'_3 = -9/4.
+
+Because we have already computed the eigenvectors and eigenvalues by
+other means and displayed the eigen-structure as above, we already
+what the power method and the equations should recover and will check
+that the two sets six equations give the following results:
+
+The norm of the eigenvalues should be recovered by the equations as
+r_0 = Sqrt[5]/2
+
+The angle associated with the first eigenvalue should be recovered as
+u_0 = Arctan[1/2] (By construction the angle of the second will be -u_0.)
+
+Our pre-knowledge of y_1, v_1, v_2 tells us that the decomposition
+coefficients \alpha_1 and \alpha_2 of y_1 in the v_1, v_2 space should
+be recovered as
+y_1   =   \alpha_1    v_1  +   \alpha2    v_2
+      =  r1 e^{i w_1) v_1  +  r2 e^{i w2} v_2
+      =  1  e^{i \pi} v_1  +  2  e^{i 0}  v_2
+
+(since
+  1    =     -1        1   +     2         1
+ 1+i                1-(i/3)              1+(i/3)  
+ ).
+
+In other words the solutions for r_1, r_2, w_1, w_2 should be
+r_1 = 1
+r_2 = 2
+w_1 = \pi
+w_2 = 0
+
+     The polynomials, fractions, and radicals in a1, b1, a2, b2, a3,
+b3, in the mathematica solutions was provided in a previous email (and
+included far below) as a double-barrelled process where r0, u0, r1 and
+r2 are recovered first and the results used as input in two formula
+for w1 and w2. (These formula will have to be programmed into our
+software.  In the meantime, mathematica can either return all six
+variables directly from its thousands of lines of code [which is what
+is provided below] or use the double barrelled approach that our code
+will have to follow. [which has been checked once by example to ensure
+that the same answer was reached.]
+
+     The solution given by mathematica to the equations with the
+inputs for the first component are
+
+r0 -> Sqrt[5]/2,
+u0 -> ArcTan[1/2] + 2 \[Pi]k
+r1 -> 1,
+r2 -> 2,
+w1 -> \[Pi] + 2 \[Pi]m
+w2 -> 0 -2\[Pi]n
+
+Normalization of the first components of the eigenvector to 1 + 0i
+enables the recovery of the mixing coefficients
+     \alpha_1 =  p_1 e^i{\theta}_1
+and  \alpha_2 =  p_2 e^i{\theta}_2,
+Using the recovere r1, r2, w1, and w2
+and using the eigenvector first component equations
+    1 +0i = u_1 = s_1 e^{i {\phi}_1},
+    1 +0i = u_2 = s_2 e^{i {\phi}_2},
+implies s_1 = s_2 = 1 and {\phi}_1} = {\phi}_2 = 0.
+These normalization settings in the first component
+together with the mixture interplay equations from above
+    r_1 = p_1 s_1 ,
+    r_2 = p_2 s_2 ,
+    w_1 = {\theta}_1 + {\phi}_1 , and
+    w_2 = {\theta}_2 + {\phi}_2
+implies the values in the mixture coefficients can be recovered as
+p_1 = r_1 = 1
+p_2 = r_2 = 2
+{\theta}_1 = w_1 = \Pi
+{\theta}_2 = w_2 = 0
+
+    With the recovered mixture coefficients we can now turn our
+attention to the second component of the eigen vectors.  The right
+hand side for the six nonlinear equations come from the second set of
+observables above:
+
+ a'_1 = 1;  b'_1 = 1;  a'_2 = 7/6;  b'_2 = -1/2;  a'_3 = 13/12;  b'_3 = -9/4.
+
+  r'1 Cos[(w'1)] + r'2 Cos[(w'2)] == a'1 ,
+  r'1 Sin[(w'1)] + r'2 Sin[(w'2)] == b'1 ,
+  r'0 r'1 Cos[(w'1 + u'0)] + r'0 r'2 Cos[(w'2 - u'0)] == a'2 ,
+  r'0 r'1 Sin[(w'1 + u'0)] + r'0 r'2 Sin[(w'2 - u'0)] == b'2 ,
+  ((r'0)^2) r'1 Cos[(w'1 + 2 u'0)] + ((r'0)^2) r'2 Cos[(w'2 - 2 u'0)] == a'3 ,
+  ((r'0)^2) r'1 Sin[(w'1 + 2 u'0)] + ((r'0)^2) r'2 Sin[(w'2 - 2 u'0)] == b'3 ,
+
+give the recovery information for the second component:
+r'0 -> Sqrt[5]/2,
+u'0 -> ArcTan[1/2] + 2 \[Pi] k
+r'1 -> Sqrt[10]/3,
+r'2 -> (2 Sqrt[10])/3,
+w'1 ->  \[Pi] - ArcTan[1/3] + 2 \[Pi] m
+w'2 ->  ArcTan[1/3] - 2 \[Pi] n.
+
+The r'0 and u'0 recoveries duplicate the eigenvalue recoveries found by
+the solutions from the first component
+\lambda_1 = (1+i/2) and
+\lambda_2 = (1-i/2).
+
+The r'_1, r'_2, w'_1, and w'_2 recoveries along with the mixture
+interplay equations
+
+    r'_1 = p_1 s'_1 ,
+    r'_2 = p_2 s'_2 ,
+    w'_1 = {\theta}_1 + {\phi}'_1 , and
+    w'_2 = {\theta}_2 + {\phi}'_2
+
+together with the recovered mixture coefficient information from
+the first component
+    p_1 = r_1 = 1
+    p_2 = r_2 = 2
+    {\theta}_1 = \Pi
+    {\theta}_2 = 0
+
+recover the variables for the second component u'_1 and u'_2 in the
+the eigenvectors v_1 and v_2 which were written respectively as
+    u'_1 = s'_1 e^{i {\phi}'_1},
+    u'_2 = s'_2 e^{i {\phi}'_2}.
+
+The eigenvector component recoveries are:
+    s'_1      = r'_1/p_1 = (Sqrt[10]/3) / 1    =  Sqrt[10]/3
+    s'_2      = r'_2/p_2 = (2 Sqrt[10])/3 / 2  =  Sqrt[10]/3
+ {\phi}'_1 = w'_1 - {\theta}_1 = (\[Pi] - ArcTan[1/3]) - (\Pi) = - ArcTan[1/3])
+ {\phi}'_2 = w'_2 - {\theta}_2 =  (ArcTan[1/3]) - 0            = (ArcTan[1/3])
+
+Which gives the second component of v_1 as
+ u'_1 = (Sqrt[10]/3)e^{-i ArcTan[1/3]} = 1-(i/3)
+
+(The modulus of 1-(i/3) is
+Sqrt[(1-(i/3))(1+(i/3))] = Sqrt[1+(1/9)]= Sqrt[10]/3
+and the angle associated with 1-(i/3) has a ratio of sin/cos of -(1/3) / 1.
+In other words, the angle associated with 1-(i/3) is -ArcTan[1/3].
+)
+
+Similarly the the second component of v_2 is given as
+ u'_2 = (Sqrt[10]/3)e^{i ArcTan[1/3]} = 1+(i/3)
+
+(The modulus of 1+(i/3) is
+Sqrt[(1+(i/3))(1-(i/3))] = Sqrt[1+(1/9)]= Sqrt[10]/3
+and the angle associated with 1+(i/3) has a ratio of sin/cos of (1/3) / 1.
+In other words, the angle associated with 1+(i/3) is ArcTan[1/3].
+
+This completes the recovery of the eigenvalues as
+\lambda_1 = (1+i/2) and
+\lambda_2 = (1-i/2).
+
+and the associated eigenvectors as
+v1 = 1
+     1 - i/3
+and
+v2 = 1
+     1 + i/3
+Q.E.D.
+
+====================================================================
+A RESTATEMENT OF THE 6 VARIABLE SOLUTION TO THE NON LINEAR EQUATIONS
+NON LINEAR EQUATIONS THAT INCLUDES THE 6 FUNCTIONS RECOVERD BY
+MATHEMATICA THAT WILL NEED TO BE ADDED TO THE SOFTWARE
+====================================================================
+
+     In wikipedia one finds under the page on the "Jordan Normal Form"
+that a complex matrix can be factored into M = P J P^{-1} where the
+columns of P are the eigenvectors (or generalized eigenvector chain
+for eigenvalues with multiplicity)
+
+     Consider the case where the eigenvalues with maximum modulus are
+a single pair of complex conjugates,
+
+{\lambda}_1  = a + ib  = r_0 e^{iu_0},
+{\lambda}_2  = a - ib  = r_0 e^{-iu_0},
+
+with associated eigenvectors v_1 and v_2.
+
+Further suppose that all other eigenvalues have smaller modulus.
+
+     A random initial vector, y_0, is in the span of the columns of P
+and can be written as a linear combination of all the columns.  Thus
+the vector, y_0, can be decomposed as a linear combination of a vector
+in the span of v1 and v2 and a vector in its perp-space orthogonal to
+both v_1 and v_2.
+
+     The existence of P^{-1} as an inverse for the matrix whose column
+vectors are eigenvectors means that these two spaces (the top
+2-dimensional eigenspace and the perp space) remain unmixed after
+multiplication by M. The difference between the eigenvalue moduli of
+the top pair and the second largest moduli (the top eigenvalue modulus
+from the perp space) causes the contribution of the perp space, to the
+result from successive applications of M, to diminish geometrically
+thus causing exponential convergence toward vectors in the span of v_1
+and v_2 if renormalizations are performed between each application of
+M.
+
+    After a sufficient number of iterations, K, for the perp
+contribution to be neglibible, let y_K = M^K y_0 / C where C is the
+product of all the normalization constants.
+
+    The following demonstrates how the eigenvalues and eigenvectors
+can be recovered from the real and complex parts of the converged y_K
+and two further un-normalized application of the matrix M.  As we will
+see, it will become necessary to include a complex perturbation to the
+initial vector y_0 before proceeding to avoid a division by zero in
+the recovery which would occur if the start of the iteration contained
+no imaginary contribution in the top-pair eigenspace.
+
+     Since y_K is in the span of v_1 and v_2, y_K can be written as
+
+    y_K = \alpha_1 v_1 + \alpha_2 v_2.
+
+Suppose the mixture coefficients are written as
+
+     \alpha_1 =  p_1 e^i{\theta}_1
+and  \alpha_2 =  p_2 e^i{\theta}_2
+
+and suppose the the first component of each of the vector v_1 and v_2
+are written respectively as
+
+      u_1 = s_1 e^{i {\phi}_1}
+      u_2 = s_2 e^{i {\phi}_2}.
+
+If one further lets
+
+    r_1 = p_1 s_1 ,
+    r_2 = p_2 s_2 ,
+    w_1 = {\theta}_1 + {\phi}_1 , and
+    w_2 = {\theta}_2 + {\phi}_2 .
+
+then the first component of y_K can be written as
+
+z_1 = r_1 e^{i w_1} + r_2 e^{i w_2}
+
+Since a further application of M multiplies v_1 by \lambda_1 = r_0
+e^{i u_0} and multiplies v_2 by \lamda_2 = r_0 e^{-i u_0}, after
+combination with the mixture coefficients, one has the first component
+of the resulting vector as
+
+z_2 = r_0 r_1 e^ {i (w_1 + u_0)} +
+              r_0 r_2 e^ {i (w_2 - u_0)}
+
+Similarly a second further application of A produces
+
+z_3 = ((r_0)^2) r_1 e^ {i (w_1 + 2 u_0)} +
+              ((r_0)^2) r_2 e^ {i (w_2 - 2 u_0)}
+
+Now if one has made the three first component observations
+
+z_1     as a_1 + i b_1
+z_2     as a_2 + i b_2
+z_3     as a_3 + i b_3
+
+then the real and imaginary parts of the equations give
+
+  r1 Cos[(w1)] + r2 Cos[(w2)] == a1 ,
+  r1 Sin[(w1)] + r2 Sin[(w2)] == b1 ,
+  r0 r1 Cos[(w1 + u0)] + r0 r2 Cos[(w2 - u0)] == a2 ,
+  r0 r1 Sin[(w1 + u0)] + r0 r2 Sin[(w2 - u0)] == b2 ,
+  ((r0)^2) r1 Cos[(w1 + 2 u0)] + ((r0)^2) r2 Cos[(w2 - 2 u0)] == a3 ,
+  ((r0)^2) r1 Sin[(w1 + 2 u0)] + ((r0)^2) r2 Sin[(w2 - 2 u0)] == b3 .
+
+It turns out that one can indeed solve these six nonlinear equations
+for the six unknowns u0, w1, w2, r0, r1, and r2 via the mathematica
+call
+
+ Solve[{r1 Cos[(w1)] + r2 Cos[(w2)] == a1 ,
+  r1 Sin[(w1)] + r2 Sin[(w2)] == b1 ,
+  r0 r1 Cos[(w1 + u)] + r0 r2 Cos[(w2 - u)] == a2 ,
+  r0 r1 Sin[(w1 + u)] + r0 r2 Sin[(w2 - u)] == b2 ,
+  ((r0)^2) r1 Cos[(w1 + 2 u)] + ((r0)^2) r2 Cos[(w2 - 2 u)] == a3 ,
+  ((r0)^2) r1 Sin[(w1 + 2 u)] + ((r0)^2) r2 Sin[(w2 - 2 u)] == b3},
+  {u, w1, w2, r0, r1, r2}]
+
+The result is given in a roughly seven thousand line answer that is
+repeated several times to allow for all the sign possibilities.
+
+The answer begins with
+
+r0 -> +/- (Sqrt[-a3 b2 + a2 b3] /
+           Sqrt[-a2 b1 + a1 b2])
+
+where the negative values are to be rejected.
+
+This is followed by
+u0 ->  
+    (Optional \pi)
+    +/- ArcTan[
+    (   (a3 b1 Sqrt[-a3 b2 + a2 b3]) / Sqrt[-a2 b1 + a1 b2]
+      - (a1 b3 Sqrt[-a3 b2 + a2 b3]) / Sqrt[-a2 b1 + a1 b2]  ) /
+      (2 (-a3 b2 + a2 b3)),
+      -( Sqrt[-a3^2 b1^2 + 4 a2 a3 b1 b2 - 4 a1 a3 b2^2 -
+              4 a2^2 b1 b3 + 2 a1 a3 b1 b3 + 4 a1 a2 b2 b3 -
+     a1^2 b3^2]  /
+     (2 Sqrt[a2 a3 b1 b2 - a1 a3 b2^2 -
+             a2^2 b1 b3 + a1 a2 b2 b3] )
+)
+] +  2 \[Pi] c2 if c2 is an integer.
+
+Where ArcTan[x,y] is the arc whose tangent is y/x taking into account
+which quadrant the point (x,y) is in. Furthermore the choice of the
+optional \pi and the sign choice on the ArcTan is automatically made
+by the previous choice of positive sign on r0
+
+While the above two are sufficient for computing the eigenvalues, if
+one wanted to recover the eigenvectors then one needs the mixture
+coefficients. (There are a small number of answers arising from (+/-)
+decisions in front of various square root signs.  One selects the
+choices that give positive r1 and r2. The remaining choice (tied
+partially to the u_0 solution above) simply reverses the order of the
+eigenvectors and the associated order of the conjugate eigenvalues.)
+
+
+r1 -> (+/-) ((\[Sqrt](-a2^4 b1^2 + a1 a2^2 a3 b1^2 + 2 a1 a2^3 b1 b2 -
+          2 a1^2 a2 a3 b1 b2 - a1^2 a2^2 b2^2 + a1^3 a3 b2^2 -
+          a2^2 b1^2 b2^2 + 2 a1 a2 b1 b2^3 - a1^2 b2^4 +
+          a2^2 b1^3 b3 - 2 a1 a2 b1^2 b2 b3 +
+          a1^2 b1 b2^2 b3 + (a2^3 b1^3 Sqrt[-a3 b2 +
+              a2 b3] \[Sqrt](-a3^2 b1^2 + 4 a2 a3 b1 b2 -
+                4 a1 a3 b2^2 - 4 a2^2 b1 b3 + 2 a1 a3 b1 b3 +
+                4 a1 a2 b2 b3 - a1^2 b3^2))/(Sqrt[-a2 b1 + a1 b2]
+              Sqrt[a2 a3 b1 b2 - a1 a3 b2^2 - a2^2 b1 b3 +
+              a1 a2 b2 b3]) - (3 a1 a2^2 b1^2 b2 Sqrt[-a3 b2 +
+              a2 b3] \[Sqrt](-a3^2 b1^2 + 4 a2 a3 b1 b2 -
+                4 a1 a3 b2^2 - 4 a2^2 b1 b3 + 2 a1 a3 b1 b3 +
+                4 a1 a2 b2 b3 - a1^2 b3^2))/(Sqrt[-a2 b1 + a1 b2]
+              Sqrt[a2 a3 b1 b2 - a1 a3 b2^2 - a2^2 b1 b3 +
+              a1 a2 b2 b3]) + (3 a1^2 a2 b1 b2^2 Sqrt[-a3 b2 +
+              a2 b3] \[Sqrt](-a3^2 b1^2 + 4 a2 a3 b1 b2 -
+                4 a1 a3 b2^2 - 4 a2^2 b1 b3 + 2 a1 a3 b1 b3 +
+                4 a1 a2 b2 b3 - a1^2 b3^2))/(Sqrt[-a2 b1 + a1 b2]
+              Sqrt[
+             a2 a3 b1 b2 - a1 a3 b2^2 - a2^2 b1 b3 +
+              a1 a2 b2 b3]) - (a1^3 b2^3 Sqrt[-a3 b2 +
+              a2 b3] \[Sqrt](-a3^2 b1^2 + 4 a2 a3 b1 b2 -
+                4 a1 a3 b2^2 - 4 a2^2 b1 b3 + 2 a1 a3 b1 b3 +
+                4 a1 a2 b2 b3 - a1^2 b3^2))/(Sqrt[-a2 b1 + a1 b2]
+              Sqrt[a2 a3 b1 b2 - a1 a3 b2^2 - a2^2 b1 b3 +
+              a1 a2 b2 b3])))/(\[Sqrt](a3^2 b1^2 - 4 a2 a3 b1 b2 +
+          4 a1 a3 b2^2 + 4 a2^2 b1 b3 - 2 a1 a3 b1 b3 -
+          4 a1 a2 b2 b3 + a1^2 b3^2)))
+
+r2 -> (-/+)((\[Sqrt](-a2^4 b1^2 + a1 a2^2 a3 b1^2 + 2 a1 a2^3 b1 b2 -
+          2 a1^2 a2 a3 b1 b2 - a1^2 a2^2 b2^2 + a1^3 a3 b2^2 -
+          a2^2 b1^2 b2^2 + 2 a1 a2 b1 b2^3 - a1^2 b2^4 +
+          a2^2 b1^3 b3 - 2 a1 a2 b1^2 b2 b3 +
+          a1^2 b1 b2^2 b3 - (a2^3 b1^3 Sqrt[-a3 b2 +
+              a2 b3] \[Sqrt](-a3^2 b1^2 + 4 a2 a3 b1 b2 -
+                4 a1 a3 b2^2 - 4 a2^2 b1 b3 + 2 a1 a3 b1 b3 +
+                4 a1 a2 b2 b3 - a1^2 b3^2))/(Sqrt[-a2 b1 + a1 b2]
+              Sqrt[a2 a3 b1 b2 - a1 a3 b2^2 - a2^2 b1 b3 +
+              a1 a2 b2 b3]) + (3 a1 a2^2 b1^2 b2 Sqrt[-a3 b2 +
+              a2 b3] \[Sqrt](-a3^2 b1^2 + 4 a2 a3 b1 b2 -
+                4 a1 a3 b2^2 - 4 a2^2 b1 b3 + 2 a1 a3 b1 b3 +
+                4 a1 a2 b2 b3 - a1^2 b3^2))/(Sqrt[-a2 b1 + a1 b2]
+              Sqrt[a2 a3 b1 b2 - a1 a3 b2^2 - a2^2 b1 b3 +
+              a1 a2 b2 b3]) - (3 a1^2 a2 b1 b2^2 Sqrt[-a3 b2 +
+              a2 b3] \[Sqrt](-a3^2 b1^2 + 4 a2 a3 b1 b2 -
+                4 a1 a3 b2^2 - 4 a2^2 b1 b3 + 2 a1 a3 b1 b3 +
+                4 a1 a2 b2 b3 - a1^2 b3^2))/(Sqrt[-a2 b1 + a1 b2]
+              Sqrt[a2 a3 b1 b2 - a1 a3 b2^2 - a2^2 b1 b3 +
+              a1 a2 b2 b3]) + (a1^3 b2^3 Sqrt[-a3 b2 +
+              a2 b3] \[Sqrt](-a3^2 b1^2 + 4 a2 a3 b1 b2 -
+                4 a1 a3 b2^2 - 4 a2^2 b1 b3 + 2 a1 a3 b1 b3 +
+                4 a1 a2 b2 b3 - a1^2 b3^2))/(Sqrt[-a2 b1 + a1 b2]
+              Sqrt[a2 a3 b1 b2 - a1 a3 b2^2 - a2^2 b1 b3 +
+              a1 a2 b2 b3])))/(\[Sqrt](a3^2 b1^2 - 4 a2 a3 b1 b2 +
+          4 a1 a3 b2^2 + 4 a2^2 b1 b3 - 2 a1 a3 b1 b3 -
+          4 a1 a2 b2 b3 + a1^2 b3^2)))
+
+One also needs the angles w_1 and w_2. There are two solutions with a
+sign switch (-/+) in front of a square root signs. The choice to be
+taken is already tied to the choice of the r1, r2 recoveries. Either
+is fine since as long as it is consistent with the previous choice
+since it simply results in a reversal of which eigenvector is listed
+first (and is automatically tied to the appropriate eigenvalue.)
+
+   w1 ->ArcTan[(a1^3 r1 + a1 a2^2 r1 + a1 r1^3 - a1 r1 r2^2 (-/+)
+      Sqrt[-a1^4 a2^2 r1^2 - 2 a1^2 a2^4 r1^2 - a2^6 r1^2 +
+       2 a1^2 a2^2 r1^4 + 2 a2^4 r1^4 - a2^2 r1^6 +
+       2 a1^2 a2^2 r1^2 r2^2 + 2 a2^4 r1^2 r2^2 + 2 a2^2 r1^4 r2^2 -
+       a2^2 r1^2 r2^4])/(
+     2 (a1^2 r1^2 + a2^2 r1^2)), -((-a1^2 - a2^2 - r1^2 + (a1^4 r1^2)/(
+       a1^2 r1^2 + a2^2 r1^2) + (a1^2 a2^2 r1^2)/(
+       a1^2 r1^2 + a2^2 r1^2) + (a1^2 r1^4)/(a1^2 r1^2 + a2^2 r1^2) +
+       r2^2 - (a1^2 r1^2 r2^2)/(a1^2 r1^2 + a2^2 r1^2) (-/+) (
+       a1 r1 Sqrt[-a1^4 a2^2 r1^2 - 2 a1^2 a2^4 r1^2 - a2^6 r1^2 +
+         2 a1^2 a2^2 r1^4 + 2 a2^4 r1^4 - a2^2 r1^6 +
+         2 a1^2 a2^2 r1^2 r2^2 + 2 a2^4 r1^2 r2^2 + 2 a2^2 r1^4 r2^2 -
+         a2^2 r1^2 r2^4])/(a1^2 r1^2 + a2^2 r1^2))/(2 a2 r1))] +
+    2 \[Pi] c_1 for c_1 an integer
+   
+  w2 -> [
+    ArcTan[-((-a1 + (a1^3 r1^2)/(2 (a1^2 r1^2 + a2^2 r1^2)) + (
+        a1 a2^2 r1^2)/(2 (a1^2 r1^2 + a2^2 r1^2)) + (a1 r1^4)/(
+        2 (a1^2 r1^2 + a2^2 r1^2)) - (a1 r1^2 r2^2)/(
+        2 (a1^2 r1^2 + a2^2 r1^2)) (-/+) (
+        r1 Sqrt[-a1^4 a2^2 r1^2 - 2 a1^2 a2^4 r1^2 - a2^6 r1^2 +
+          2 a1^2 a2^2 r1^4 + 2 a2^4 r1^4 - a2^2 r1^6 +
+          2 a1^2 a2^2 r1^2 r2^2 + 2 a2^4 r1^2 r2^2 + 2 a2^2 r1^4 r2^2 -
+          a2^2 r1^2 r2^4])/(2 (a1^2 r1^2 + a2^2 r1^2)))/r2), (-a1^2 +
+       a2^2 - r1^2 + (a1^4 r1^2)/(a1^2 r1^2 + a2^2 r1^2) + (
+       a1^2 a2^2 r1^2)/(a1^2 r1^2 + a2^2 r1^2) + (a1^2 r1^4)/(
+       a1^2 r1^2 + a2^2 r1^2) + r2^2 - (a1^2 r1^2 r2^2)/(
+       a1^2 r1^2 + a2^2 r1^2) (-/+) (
+       a1 r1 Sqrt[-a1^4 a2^2 r1^2 - 2 a1^2 a2^4 r1^2 - a2^6 r1^2 +
+         2 a1^2 a2^2 r1^4 + 2 a2^4 r1^4 - a2^2 r1^6 +
+         2 a1^2 a2^2 r1^2 r2^2 + 2 a2^4 r1^2 r2^2 + 2 a2^2 r1^4 r2^2 -
+         a2^2 r1^2 r2^4])/(a1^2 r1^2 + a2^2 r1^2))/(2 a2 r2)] +
+     2 \[Pi] c_2 for c_2 an integer
+
+Thus one can recover the norms, r_1, r_2, and then the angles, w_1 and
+w_2, for each component.
+
+In order to recover the underlying norms and angular values of
+eigenvectors one needs to consider eigenvector normalization.  Real
+eigenvectors are arbitrary up to magnitude. Complex eigenvectors are
+arbitrary up to magnitude and rotation. Each of the two eigenvectors
+needs to have an additional norm specification and an additional angle
+specification.  As long as the first components are nonzero, for
+convenience, without loss of further generality one can specify the
+norms of the first component of each both to be one and the angles of
+the first component of each to both be zero.
+
+     Having set these four quantities, there is now enough information
+to recover all the remaining norms and angles of the eigenvectors from
+the component values observed in y_K, y_{K+1}, and y_{K+2}.  At each
+component one recovers
+
+Recall that the the first component of each of the vector v_1 and v_2
+was written respectively as
+
+      u_1 = s_1 e^{i {\phi}_1}
+      u_2 = s_2 e^{i {\phi}_2}.
+
+and that the combination with the mixture coefficients
+     \alpha_1 =  p_1 e^i{\theta}_1
+and  \alpha_2 =  p_2 e^i{\theta}_2
+
+produced the four variables later recovered by mathematica for the
+first component
+
+    r_1 = p_1 s_1 ,
+    r_2 = p_2 s_2 ,
+    w_1 = {\theta}_1 + {\phi}_1 , and
+    w_2 = {\theta}_2 + {\phi}_2 .
+
+The normalization settings for the two eigenvectors set
+
+    s_1 = 1,
+    s_2 = 1,
+    {\phi}_1 = 0
+and {\phi}_2 = 0.
+
+These normalization settings recover the mixture variables as
+
+    p_1 = r_1 ,
+    p_2 = r_2 ,
+    {\theta}_1 = w_1, and
+    {\theta}_2 = w_2.
+
+With known eigenvalues and known mixture components one can
+proceed to the observations at the second component.
+
+Suppose the the second component of each of
+the vector v_1 and v_2 are written respectively as
+
+      u'_1 = s'_1 e^{i {\phi}'_1}
+      u'_2 = s'_2 e^{i {\phi}'_2}.
+
+If one further lets
+
+    r'_1 = p_1 s'_1 ,
+    r'_2 = p_2 s'_2 ,
+    w'_1 = {\theta}_1 + {\phi}'_1 , and
+    w'_2 = {\theta}_2 + {\phi}'_2 .
+
+then the second component of y_K, y_{K+1}, and y+{K+2} can be written as
+
+(y_K)_1    = r'_1 e^{i w'_1} + r'_2 e^{i w'_2}
+ 
+(y_{K+1)_1 = r_0 r'_1 e^{i (w'_1 + u_0)} + r_0 r'_2 e^{i (w'_2 - u_0)}
+
+(y_{K+2)_1 = ((r_0)^2) r'_1 e^{i (w'_1 + u2 _0)} + ((r_0)^2) r'_2 e^{i (w'_2 - u)}
+
+Setting these equal to the three observables a'_1 +i b'_1, a'_2 + i
+b'_2, and a'_3 + i b'_3 respectively, and once again setting
+mathematica to work on the real and imaginary parts of these equations
+returns similar formulae for r'_1, r'_2, w'_1, and w'_2 .
+
+Now using the facts that p_1, p_2, {\theta}_1, and {\theta}_2 were recovered
+with the normalized first component, these together with the four equations
+    r'_1 = p_1 s'_1 ,
+    r'_2 = p_2 s'_2 ,
+    w'_1 = {\theta}_1 + {\phi}'_1 , and
+    w'_2 = {\theta}_2 + {\phi}'_2 .
+
+enable one now to recover the second component magnitudes and angles as
+
+    s'_1 = r'_1 / p_1  ,
+    s'_2 = r'_2 / p_2  ,
+    {\phi}'_1 = w'_1 - {\theta}_1 and
+    {\phi}'_2 = w'_2 - {\theta}_2 .        
+
+All the remaining components of the two eigenvectors can be recovered
+similarly.  If one wishes then at the end one can renormalize the
+norms to be one and choose 0 angles as the average of all the angles.
+
+     A problem arises if the Matrix M is real and if the initial vector
+is also real. Note that a denominator in the formula for the eigenvector
+angle u_0 has the term (-a3 b2 + a2 b3). In the case of all real
+components the imaginary parts b1, b2, and b3 are all zero and thus
+the denominator in the formula is zero.
+===================================================================
+AN ADDITIONAL WORKED OUT EXAMPLE SHOWING THE RECOVERY OF THE
+EIGENVECTORS AND EIGENVALUES FROM A SMALL TWO BY TWO CASE WAS INCLUDED
+IN A PREVIOUS E-MAIL
+====================================
+
+Cheers, Richard
+
+On Fri, Apr 10, 2020 at 1:51 PM Richard Bates <rmcbates@gmail.com> wrote:
+
+    In the all real case (matrix and initial vector), one of the denominators is guaranteed to be zero
+    in the eigenvalue angle recovery.
+    This means that the given formulas for the angle recovery could never be applied in the
+    all real case.
+    In a simple example, Mathematica recovers the correct eigenvalue norm and then
+    gives all the remaining variables as a function of only this unrecovered angle.
+
+    The simple case is the two by two matrix
+
+     1  1
+    -1  1
+
+    with eigenvalues 1+i and 1-i and eigen vectors
+     1
+      i
+
+     1
+     -i
+    and starting  with a vector of
+     2
+     2
+
+    I will append the details to the previous explanation and send it later.
+
+    How to proceed then?
+
+    It turns out that when the matrix is all real, if one begins with a complex starting vector instead of an all
+    real vector, then the recovery of eigenvalues and eigenvectors proceeds without a hitch.  In the above
+    matrix example, starting with the vector
+      2
+    1+i
+    proceeds to a small number of possible answers one of which is correct.
+    I have not yet finished checking if the other solutions are equivalent. Nor
+    have I looked at the effect of higher dimensions -  but the intuition is that
+    randomizing the perturbation into the complex realm should be sufficient
+    to avoid the zero denominator.
+
+    Cheers
+    Richard
+    ===============
+

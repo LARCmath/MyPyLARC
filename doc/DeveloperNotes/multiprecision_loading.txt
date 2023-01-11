@@ -1,0 +1,73 @@
+This document discusses the storing of multiprecision values in the LARC
+MatrixStore.
+========================================================================
+
+To begin, one should consider the precision of the scalarType chosen when LARC
+is complied, as any excess precision in the data to be stored will be lost.
+MPInteger, MPRational and MPRatComplex types will allocate whatever memory is
+needed to exactly represent the number given to them. In contrast, MPReal is
+limited (by the current setting of the mpfr_prec_t constant mpreal_precision in
+global.c) to 256 bits of mantissa precision, and MPComplex to 256 bits of
+mantissa for each of its real and imaginary parts. Integer scalarType has 64
+bits of precision, and Real scalarType is C long double, with precision for
+mantissa and exponent that depends on your platform (but should be at least 64
+bits total).
+
+If you already have your multiprecision value in string form, then you can
+simply call the LARC routine
+	get_valID_from_valString
+from either C or Python to load the value into the MatrixStore. However, for
+complex types, the data must be in the format "a+I*b" for the conversions to
+work properly, so it may be necessary to reformat your string before calling
+this routine.
+
+If you need to calculate the value, there are somewhat different procedures
+depending on whether you are using C or Python.
+
+1) C code
+
+Example code can be found in LARC's global.c routine, where the value 1/sqrt(2)
+is preloaded into LARC's MatrixStore. The value is calculated using floating
+point arithmetic with {\tt mpreal_precision} bits of precision and then
+converted to a LARC scalarType. Note that once the value is converted to
+scalarType, we free the memory from the temporary mpfr_t variable. In most
+cases we will also want to free the memory of the scalarType variable once the
+value is in the MatrixStore.
+
+It is necessary for your code to have access to the MPFR and (if complex) MPC
+libraries, so you will need the include statements
+	#include <mpfr.h>
+	#include <mpc.h>
+You will of course also need access to the LARC library, minimally through
+	#include "larc.h"
+	#include "scalars.h"
+
+The first step is calculation of your scalar value using the MPFR or MPC
+library. Once this is done, a call to
+	convert_from_mpfr_to_scalarType
+for real values (scalarType may be complex) or
+	convert_from_two_mpfr_to_complex_scalarType
+for complex values will generate the appropriate scalarType value. Finally,
+	get_valMatPTR_from_val 
+will load the scalarType value into LARC's MatrixStore.
+
+2) Python code
+
+We only allow data in string form to pass through the SWIG interface between
+Python and LARC's C code, so all multiprecision data must first be converted to
+a string.
+
+We assume LARC is accessed via
+	import pylarc
+(if not, replace "pylarc" below with the name you have chosen). Access to the
+MPFR and MPC multiprecision libraries is provided through
+	import gmpy2
+
+Use the gmpy2 library functions to calculate your multiprecision value and 
+convert it to a string. (Note that a value returned by mpc_get_str needs
+further editing. If your complex value is a+ib, mpc_get_str returns "(a b)";
+for LARC to understand the input, you must convert it to the string "a+I*b".)
+Once you have the value in string format, 
+	pylarc.get_valID_from_valString
+will convert it to a scalarType and load it into the MatrixStore.
+

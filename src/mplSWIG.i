@@ -1,19 +1,89 @@
 %module mplSWIG
 
+ /******************************************************************
+ *                                                                *
+ * Copyright (C) 2014, Institute for Defense Analyses             *
+ * 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           *
+ * This material may be reproduced by or for the US Government    *
+ * pursuant to the copyright license under the clauses at DFARS   *
+ * 252.227-7013 and 252.227-7014.                                 *
+ *                                                                *
+ * LARC : Linear Algebra via Recursive Compression                *
+ * Authors:                                                       *
+ *   - Steve Cuccaro (IDA-CCS)                                    *
+ *   - John Daly (LPS)                                            *
+ *   - John Gilbert (UCSB, IDA adjunct)                           *
+ *   - Mark Pleszkoch (IDA-CCS)                                   *
+ *   - Jenny Zito (IDA-CCS)                                       *
+ *                                                                *
+ * Additional contributors are listed in "LARCcontributors".      *
+ *                                                                *
+ * Questions: larc@super.org                                      *
+ *                                                                *
+ * All rights reserved.                                           *
+ *                                                                *
+ * Redistribution and use in source and binary forms, with or     *
+ * without modification, are permitted provided that the          *
+ * following conditions are met:                                  *
+ *   - Redistribution of source code must retain the above        *
+ *     copyright notice, this list of conditions and the          *
+ *     following disclaimer.                                      *
+ *   - Redistribution in binary form must reproduce the above     *
+ *     copyright notice, this list of conditions and the          *
+ *     following disclaimer in the documentation and/or other     *
+ *     materials provided with the distribution.                  *
+ *   - Neither the name of the copyright holder nor the names of  *
+ *     its contributors may be used to endorse or promote         *
+ *     products derived from this software without specific prior *
+ *     written permission.                                        *
+ *                                                                *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND         *
+ * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,    *
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF       *
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE       *
+ * DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER NOR        *
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,   *
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT   *
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;   *
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       *
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN      *
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR   *
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, *
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             *
+ *                                                                *
+ *****************************************************************/
+
+/*
+  The following functions all return char * (string) type from malloc'd
+  memory and are declared in headers in this .i file. This is how you
+  tell SWIG it's ok for the wrapper functions to free the memory.
+*/
+%newobject info_get;                                  /* info_store.h */
+%newobject create_log_dir;                            /* larc.h */
+%newobject sca_get_str;                               /* larc.h */
+%newobject tracenorm;                                 /* matmath.h */
+%newobject trace;                                     /* matmath.h */
+%newobject get_scalar_value_string;                   /* matmath.h */
+%newobject matrix_count_entries;                      /* matmath.h */
+%newobject get_list_of_scalars_in_larcMatrixFile;     /* matmath.h */
+%newobject get_readableString_scalar_from_pID_and_coords;/* matrix_store.h */
+
 %{
 #include "../larc/src/type.h"
+#include "../larc/src/larc.h"
 #include "../larc/src/fft.h"
-#include "../larc/src/experimental.h"
 #include "../larc/src/global.h"
+#include "../larc/src/hash.h"
+#include "../larc/src/info_store.h"
 #include "../larc/src/io.h"
 #include "../larc/src/matmath.h"
-#include "../larc/src/larc.h"
-#include "../larc/src/info_store.h"
 #include "../larc/src/matrix_store.h"
 #include "../larc/src/op_store.h"
 #include "../larc/src/organize.h"
 #include "../larc/src/scalars.h"
+#include "version.h"
 #include "gate.h"
+#include "sycamore.h"
 #include <complex.h>
 #include <gmp.h>
 #include <pthread.h>
@@ -84,18 +154,20 @@
 // # type.h, so type.h must be before it in the list
 
 %include "../larc/src/type.h"
+%include "../larc/src/larc.h"
 %include "../larc/src/fft.h"
-%include "../larc/src/experimental.h"
 %include "../larc/src/global.h"
+%include "../larc/src/hash.h"
+%include "../larc/src/info_store.h"
 %include "../larc/src/io.h"
 %include "../larc/src/matmath.h"
-%include "../larc/src/larc.h"
-%include "../larc/src/info_store.h"
 %include "../larc/src/matrix_store.h"
 %include "../larc/src/op_store.h"
 %include "../larc/src/organize.h"
 %include "../larc/src/scalars.h"
+%include "version.h"
 %include "gate.h"
+%include "sycamore.h"
 
 %array_class(complex, complexArray);
 %array_class(long int, int64Array); // works because SWIGWORDSIZE64 defined

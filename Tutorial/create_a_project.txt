@@ -1,0 +1,43 @@
+Here are a few tips that may help a new user create their own project.
+
+TIP 1: 
+   The easiest way to create your own project subdirectory is
+   to make a copy of an existing project subdirectory and then
+   modify it for your purposes.  For example, if you would like
+   a project that reads in MatrixMarketExchange formated sparse
+   matrices and does some LARC math, then outputs a result,
+   then you might like to copy the Counts_Triangle project:
+   From the top MyPyLARC directory:
+      cp -r Count_Triangles MyNewProject
+
+   Notice that we have made the project MyNewProject at the same
+   level as Count_Triangles so that any relative paths still work.
+
+   If your project used complex numbers you might instead
+   decide to use FFT_play as a template for your project:
+   From the top MyPyLARC directory:
+      cp -r FFT_play MyNewProject
+   Then don't forget to compile MyPyLARC with a complex type, e.g.:
+      cd MyPyLARC
+      make  TYPE=COMPLEX
+
+TIP 2:
+   Once you have created your directory, check to see if the code
+   that you copied still runs in the new location. It is possible
+   that paths that were not in the git repository need to be
+   created (the code should complain about the missing subdirectories
+   if there are any, e.g. a Data/Out subdirectory).
+
+TIP 3:
+   Make incremental changes in the code, checking often to
+   see if everything still works.
+
+   A list of all the matrix operations in LARC can be found
+   in MyPyLARC/README.md or in the doxygen documentation which is
+   linked from the doxygen mainpage to the content of matmath.h.
+
+   There are many examples in the Tutorial directory, that might
+   also be used.
+   
+
+

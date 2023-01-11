@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -61,8 +62,17 @@ import MyPyLARC as mypy
 import numpy as np
 from ctypes import *
 
+##
+# \file examples_cleaning.py
+#
+# \brief This sample program illustrates removing (i.e., cleaning) a
+# matrix from the matrix store after it is no longer needed.
+#
+# This is useful during long, involved computations when the intermediate
+# results are not anticipated to reoccur.
+
 if __name__ == '__main__':
-	# This version references matrices by matrixIDs instead of pointers
+	# This version references matrices by packedIDs instead of pointers
 	
     print("This code tests some basic matrix building and reading routines\n")
 
@@ -70,11 +80,11 @@ if __name__ == '__main__':
     mat_store_exp = 15
     op_store_exp = 5
     max_level = 10
-    rnd_sig_bits = -1   # default value
-    trunc_to_zero_bits = -1  # default value
+    regionbitparam = -1   # default value
+    zeroregionbitparam = -1  # default value
     mypy.create_report_thread(1800)
     verbose = 1
-    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
+    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,regionbitparam,zeroregionbitparam,verbose)
 
     scalarTypeStr = mypy.cvar.scalarTypeStr
 
@@ -85,38 +95,48 @@ if __name__ == '__main__':
     filename = "Data/Out/preload.%s.store" %scalarTypeStr
     iS_string = "After preload with parameters: " + str(mat_store_exp) + ", ";
     iS_string = iS_string + str(op_store_exp) + ", " + str(max_level) + "."
-    mypy.matrix_store_info_to_file(0,end,os.path.join(os.path.dirname(__file__),filename),iS_string)
+    mypy.fprint_store_info_for_matrixID_range(0,end,os.path.join(os.path.dirname(__file__),filename),iS_string)
 
     #  PLAYING WITH PREWRITTEN NONSQUARE MATRIX
     filename = "Data/In/sample.1.2.%s.json" %scalarTypeStr
     print("About to test read %s\n" %filename)
-    samp_mID = mypy.read_larcMatrix_file_return_matID(os.path.join(os.path.dirname(__file__),filename))
+    samp_pID = mypy.read_larcMatrixFile(os.path.join(os.path.dirname(__file__),filename))
 
     print("We read in the LARCMatrix file\n")
-    mypy.print_naive_by_matID(samp_mID)
+    mypy.print_naive(samp_pID)
     print("\n")
 
     # build array in C from Python list of scalars
     print("Using row_major_list_to_store on data entered from python\n")
 
-    #############################
+    #*###########################
     # create a matrix in python #
-    #############################
+    #*###########################
     if scalarTypeStr in ('Integer', 'MPInteger'):
         a_str = [1, 3, 5, 6,
                  8, 6, 3, 1,
                  -9, 11, 13, 15,
                  16, 13, 12, 10]
+    elif scalarTypeStr == 'Boolean':
+        a_str = [1, 0, 0, 0,
+                 0, 0, 0, 1,
+                 0, 1, 1, 1,
+                 1, 1, 1, 0]
     elif scalarTypeStr in ('Complex', 'MPComplex', 'MPRatComplex'):
         a_str = [1+2j, 3+4j, 5+6j, 7+8j,
                  8+7j, 6+5j, 3+4j, 1+2j,
                  9+10j, 11+12j, 13+14j, 15+16j,
                  16+15j, 14+13j, 12+11j, 10+9j]
-    elif scalarTypeStr in ('Real', 'MPReal', 'MPRational'):
+    elif scalarTypeStr in ('Real', 'MPReal', 'MPRational', 'Clifford'):
         a_str = [1, 3, 5, 6,
                  8, 6, 3, 1,
                  -9, 11, 13, 15,
                  16, 13, 12, 10]
+    elif scalarTypeStr in ('Upper', 'Lower'):
+        a_str = [0.1, 0.3, 0.5, 0.6,
+                 0.8, 0.6, 0.3, 0.1,
+                 0, 1, 0.013, 0.15,
+                 0.16, 0.13, 0.12, 0.10]
     else:
         raise Exception('Do not know how to build matrix for type %s.' %scalarTypeStr)
 
@@ -129,24 +149,24 @@ if __name__ == '__main__':
     dim_whole = 2**level
 
     # creating or finding the matrix associated with the array
-    mID = mypy.row_major_list_to_store_matrixID(a_arr, level, level, dim_whole)
-    mypy.print_naive_by_matID(mID)
+    pID = mypy.row_major_list_to_store(a_arr, level, level, dim_whole)
+    mypy.print_naive(pID)
     print("\n")
 
-    # make a parent matrix from four copies of the matrixID matrix
-    print("Creating matrix from get_matID_from_four_subMatIDs on panel input and writing LARCMatrix file\n")
-    panel = [mID]*4   # alternatively panel=[mID,mID,mID,mID]
-    mID_parent = mypy.get_matID_from_four_subMatIDs(mID,mID,mID,mID,3,3)
-    mypy.print_naive_by_matID(mID_parent)
+    # make a parent matrix from four copies of the packedID matrix
+    print("Creating matrix from get_pID_from_four_sub_pIDs on panel input and writing LARCMatrix file\n")
+    panel = [pID]*4   # alternatively panel=[pID,pID,pID,pID]
+    pID_parent = mypy.get_pID_from_four_sub_pIDs(pID,pID,pID,pID,3,3)
+    mypy.print_naive(pID_parent)
     filename = "Data/Out/testfile.%s.json" %scalarTypeStr
-    mypy.write_larcMatrix_file_by_matID(mID_parent,os.path.join(os.path.dirname(__file__), filename))
+    mypy.fprint_larcMatrixFile(pID_parent,os.path.join(os.path.dirname(__file__), filename))
     
     #  PLAYING WITH PREWRITTEN REVERSIBLE NAND JSON FILE
     print("About to test read LARCMatrix file\n")
     filename = "Data/In/nand.%s.json" %scalarTypeStr
-    nand_mID = mypy.read_larcMatrix_file_return_matID(os.path.join(os.path.dirname(__file__),filename))
+    nand_pID = mypy.read_larcMatrixFile(os.path.join(os.path.dirname(__file__),filename))
     print("We read in the LARCMatrix nand file\n")
-    mypy.print_naive_by_matID(nand_mID)
+    mypy.print_naive(nand_pID)
     print("\n")
 
     # TESTING READING AND WRITING OF MATRICES
@@ -155,41 +175,41 @@ if __name__ == '__main__':
     filename_naive = "Data/Out/sample.1.1.%s.naive" %scalarTypeStr
     filename_json = "Data/Out/sample.1.1.%s.json" %scalarTypeStr
     
-    sample_mID = mypy.read_row_major_matrix_from_file_matrixID(os.path.join(os.path.dirname(__file__),filename_rmm)) 
-    mypy.write_naive_by_matID(sample_mID,os.path.join(os.path.dirname(__file__),filename_naive))
-    mypy.write_larcMatrix_file_by_matID(sample_mID,os.path.join(os.path.dirname(__file__),filename_json))
+    sample_pID = mypy.read_row_major_matrix_from_file(os.path.join(os.path.dirname(__file__),filename_rmm)) 
+    mypy.fprint_naive(sample_pID,os.path.join(os.path.dirname(__file__),filename_naive))
+    mypy.fprint_larcMatrixFile(sample_pID,os.path.join(os.path.dirname(__file__),filename_json))
     print("Printing out the rrm sample matrix in naive format to screen\n")
-    mypy.print_naive_by_matID(sample_mID)
+    mypy.print_naive(sample_pID)
 
     print("Testing reading row major nonsquare matrices and writing files in LARCMatrix and naive format.\n")
     filename_rmm = "Data/In/sample.1.2.%s.rmm" %scalarTypeStr
     filename_naive = "Data/Out/sample.1.2.%s.naive" %scalarTypeStr
     filename_json = "Data/Out/sample.1.2.%s.json" %scalarTypeStr
     
-    sample_mID = mypy.read_row_major_matrix_from_file_matrixID(os.path.join(os.path.dirname(__file__),filename_rmm)) 
-    mypy.write_naive_by_matID(sample_mID,os.path.join(os.path.dirname(__file__),filename_naive))
-    mypy.write_larcMatrix_file_by_matID(sample_mID,os.path.join(os.path.dirname(__file__),filename_json))
+    sample_pID = mypy.read_row_major_matrix_from_file(os.path.join(os.path.dirname(__file__),filename_rmm)) 
+    mypy.fprint_naive(sample_pID,os.path.join(os.path.dirname(__file__),filename_naive))
+    mypy.fprint_larcMatrixFile(sample_pID,os.path.join(os.path.dirname(__file__),filename_json))
     print("Printing out the nonsquare rrm sample matrix\n")
-    mypy.print_naive_by_matID(sample_mID)
+    mypy.print_naive(sample_pID)
 
     print("Testing printing nonzeros to file.\n")
     filename_rmm = "Data/In/sample.1.3.%s.rmm" %scalarTypeStr
     filename_nonzeros = "Data/Out/sample.1.3.%s.nonzeros" %scalarTypeStr
     filename_json = "Data/Out/sample.1.3.%s.json" %scalarTypeStr
     
-    sample_mID = mypy.read_row_major_matrix_from_file_matrixID(os.path.join(os.path.dirname(__file__), filename_rmm))
-    mypy.write_matrix_nonzeros_by_matID(sample_mID,os.path.join(os.path.dirname(__file__),filename_nonzeros))
-    mypy.write_larcMatrix_file_by_matID(sample_mID,os.path.join(os.path.dirname(__file__),filename_json))
+    sample_pID = mypy.read_row_major_matrix_from_file(os.path.join(os.path.dirname(__file__), filename_rmm))
+    mypy.fprint_matrix_nonzeros(sample_pID,os.path.join(os.path.dirname(__file__),filename_nonzeros))
+    mypy.fprint_larcMatrixFile(sample_pID,os.path.join(os.path.dirname(__file__),filename_json))
     print("Here is the matrix we are testing for printing out nonzero values")
-    mypy.print_naive_by_matID(sample_mID)
+    mypy.print_naive(sample_pID)
     
     print("\n")
 
     # make CNOT
     print("\nHere is the CNOT (reversible XOR) matrix\n")
     CNOT_arr = list(map(str,[1,0,0,0,0,1,0,0,0,0,0,1,0,0,1,0]))
-    CNOT_mID = mypy.row_major_list_to_store_matrixID(CNOT_arr,level,level,dim_whole)
-    mypy.print_naive_by_matID(CNOT_mID)
+    CNOT_pID = mypy.row_major_list_to_store(CNOT_arr,level,level,dim_whole)
+    mypy.print_naive(CNOT_pID)
 
     # Calculate number of matrices created, then print part of matrix store
     num_matrices_made = mypy.num_matrices_created()
@@ -197,91 +217,91 @@ if __name__ == '__main__':
     start = end + 1
     end = num_matrices_made - 1
     filename = "Data/Out/cnot.%s.store" %scalarTypeStr
-    mypy.matrix_store_info_to_file(start,end,os.path.join(os.path.dirname(__file__), filename),"Loaded CNOT")
+    mypy.fprint_store_info_for_matrixID_range(start,end,os.path.join(os.path.dirname(__file__), filename),"Loaded CNOT")
 
     # build Zero matrices
     print("\nHere is the level 2 zero matrix\n")
     Z2_arr = list(map(str,[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))
-    Z2_mID = mypy.row_major_list_to_store_matrixID(Z2_arr,level,level,dim_whole)
-    mypy.print_naive_by_matID(Z2_mID)
+    Z2_pID = mypy.row_major_list_to_store(Z2_arr,level,level,dim_whole)
+    mypy.print_naive(Z2_pID)
 
     # build Identity matrices
     print("\nHere is the level 2 identity matrix\n")
     I2_arr = list(map(str,[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]))
-    I2_mID = mypy.row_major_list_to_store_matrixID(I2_arr,level,level,dim_whole)
-    mypy.print_naive_by_matID(I2_mID)
+    I2_pID = mypy.row_major_list_to_store(I2_arr,level,level,dim_whole)
+    mypy.print_naive(I2_pID)
 
-    # build a Toffoli (base unit for reversible computing)
+    # build a doubly-controlled NOT (base unit for reversible computing)
     print("\nThe 3 bit reversible AND (Toffoli) matrix with target 3rd.\n")
-    TOFFOLI_mID= mypy.get_matID_from_four_subMatIDs(I2_mID,Z2_mID,Z2_mID,CNOT_mID,3,3)
-    mypy.print_naive_by_matID(TOFFOLI_mID)
+    TOFFOLI_pID= mypy.get_pID_from_four_sub_pIDs(I2_pID,Z2_pID,Z2_pID,CNOT_pID,3,3)
+    mypy.print_naive(TOFFOLI_pID)
     filename = "Data/Out/toffoli.%s.naive" %scalarTypeStr
-    mypy.write_naive_by_matID(TOFFOLI_mID,os.path.join(os.path.dirname(__file__),filename))
+    mypy.fprint_naive(TOFFOLI_pID,os.path.join(os.path.dirname(__file__),filename))
 
-    # use Toffoli to build an NAND
+    # use CCNOT to build an NAND
     print("\nHere is the 3 bit reversible NAND matrix with target 3rd.\n")
-    NOT_matrixID = mypy.cvar.matID_NOT;
-    I1_matrixID = mypy.get_identity_matrixID(1);
-    not3_matrixID = mypy.kronecker_product_matrixID(I1_matrixID,mypy.kronecker_product_matrixID(I1_matrixID, NOT_matrixID));
-    nand_from_Toff_matrixID = mypy.matrix_mult_matrixID(not3_matrixID,TOFFOLI_mID);
-    mypy.print_naive_by_matID(nand_from_Toff_matrixID)
+    NOT_packedID = mypy.cvar.packedID_NOT;
+    I1_packedID = mypy.get_identity_pID(1);
+    not3_packedID = mypy.kronecker_product(I1_packedID,mypy.kronecker_product(I1_packedID, NOT_packedID));
+    nand_from_Toff_packedID = mypy.matrix_mult(not3_packedID,TOFFOLI_pID);
+    mypy.print_naive(nand_from_Toff_packedID)
     filename = "Data/Out/nandfromtoff.%s.naive" %scalarTypeStr
-    mypy.write_naive_by_matID(nand_from_Toff_matrixID,os.path.join(os.path.dirname(__file__),filename))
+    mypy.fprint_naive(nand_from_Toff_packedID,os.path.join(os.path.dirname(__file__),filename))
 
     #  PLAYING WITH PREWRITTEN NONSQUARE MATRIX
     filename = "Data/In/sample.1.2.%s.json" %scalarTypeStr
     print("About to test read %s\n" %filename)
-    samp_mID = mypy.read_larcMatrix_file_return_matID(os.path.join(os.path.dirname(__file__),filename))
+    samp_pID = mypy.read_larcMatrixFile(os.path.join(os.path.dirname(__file__),filename))
     print("We read in the LARCMatrix file\n")
-    mypy.print_naive_by_matID(samp_mID)
+    mypy.print_naive(samp_pID)
     
     print("does scalarM1_val print?")
     scalarM1_val = '-1'
-    scalarM1_mID = mypy.get_valID_from_valString(scalarM1_val)
-    mypy.print_naive_by_matID(scalarM1_mID)
+    scalarM1_pID = mypy.get_valID_from_valString(scalarM1_val)
+    mypy.print_naive(scalarM1_pID)
     
     print("testing scalar_mult:")
-    samp2_mID = mypy.scalar_mult_matrixID(scalarM1_mID,samp_mID)
-    mypy.print_naive_by_matID(samp2_mID)
+    samp2_pID = mypy.scalar_mult(scalarM1_pID,samp_pID)
+    mypy.print_naive(samp2_pID)
     
     print("testing addition:")
-    samp3_mID = mypy.matrix_add_matrixID(samp_mID,samp2_mID)
-    mypy.print_naive_by_matID(samp3_mID)
+    samp3_pID = mypy.matrix_add(samp_pID,samp2_pID)
+    mypy.print_naive(samp3_pID)
     
-    # save input matrixIDs for testing op store hash chains later
-    in1_test_sum_mID = samp_mID
-    in2_test_sum_mID = samp2_mID
+    # save input packedIDs for testing op store hash chains later
+    in1_test_sum_pID = samp_pID
+    in2_test_sum_pID = samp2_pID
     
     print("testing adjoint:")
-    samp3_mID = mypy.matrix_adjoint_matrixID(samp_mID)
-    mypy.print_naive_by_matID(samp3_mID)
-    adj_mID = samp3_mID
+    samp3_pID = mypy.adjoint(samp_pID)
+    mypy.print_naive(samp3_pID)
+    adj_pID = samp3_pID
     
     print("testing non-square matrix mult:")
-    samp4_mID = mypy.matrix_mult_matrixID(samp_mID,samp3_mID)
-    mypy.print_naive_by_matID(samp4_mID)
+    samp4_pID = mypy.matrix_mult(samp_pID,samp3_pID)
+    mypy.print_naive(samp4_pID)
     # print("")
-    # samp4_mID = mypy.matrix_mult_matrixID(samp3_mID,samp_mID)
-    # mypy.print_naive_by_matID(samp4_mID)
+    # samp4_pID = mypy.matrix_mult(samp3_pID,samp_pID)
+    # mypy.print_naive(samp4_pID)
 
     print("testing kron product:")
-    samp4_mID = mypy.kronecker_product_matrixID(samp_mID,samp_mID)
-    mypy.print_naive_by_matID(samp4_mID)
+    samp4_pID = mypy.kronecker_product(samp_pID,samp_pID)
+    mypy.print_naive(samp4_pID)
     
 
     print("testing join:")
-    samp4_mID = mypy.join_matrixID(samp_mID,samp_mID)
-    mypy.print_naive_by_matID(samp4_mID)
+    samp4_pID = mypy.join(samp_pID,samp_pID)
+    mypy.print_naive(samp4_pID)
     print("testing stack:")
-    samp4_mID = mypy.stack_matrixID(samp_mID,samp_mID)
-    mypy.print_naive_by_matID(samp4_mID)
+    samp4_pID = mypy.stack(samp_pID,samp_pID)
+    mypy.print_naive(samp4_pID)
 
 
-    ##  TESTING DELETION
+    #*  TESTING DELETION
     print("\nPreparing to delete a matrix from the store.\n")
     filename = "Data/Out/temp.%s.json" %scalarTypeStr
-    mypy.write_larcMatrix_file_by_matID(nand_mID, os.path.join(os.path.dirname(__file__),filename))
-    mypy.read_larcMatrix_file_return_matID(os.path.join(os.path.dirname(__file__),filename))
+    mypy.fprint_larcMatrixFile(nand_pID, os.path.join(os.path.dirname(__file__),filename))
+    mypy.read_larcMatrixFile(os.path.join(os.path.dirname(__file__),filename))
 
     # Calculate number of matrices created, then print part of matrix store
     num_matrices_made = mypy.num_matrices_created()
@@ -293,44 +313,41 @@ if __name__ == '__main__':
         start = end + 1
         end = num_matrices_made - 1
         filename = "Data/Out/nand.%s.store" %scalarTypeStr
-        mypy.matrix_store_info_to_file(start,end,os.path.join(os.path.dirname(__file__),filename),"Loaded NAND")
+        mypy.fprint_store_info_for_matrixID_range(start,end,os.path.join(os.path.dirname(__file__),filename),"Loaded NAND")
 
     # get the hashID and print the hash chain corresponding to a matrix we are about to delete
-    hashID = mypy.matrix_hashID_from_matrixID(nand_mID)
+    hashID = mypy.hash_pID(nand_pID)
     comment = "hash chain before removal"
     filename = "Data/Out/hashChain.beforeMatrixRemove"
     out_path =  os.path.join(os.path.dirname(__file__),filename)
-    # os.path.dirname(__file__) =  /.ccs/u01/jszito/LARC/tests/python
-    # os.path.join("/.ccs/u01/jszito/LARC/tests/python","Data/Out/hashChain.beforeMatrixRemove")
-    # out_path = "/.ccs/u01/jszito/LARC/tests/dat/out/hashChain.beforeMatrixRemove"
-    mypy.matrix_hash_chain_info_to_file(hashID, out_path, comment)
+    mypy.fprint_matrix_hash_chain_info(hashID, out_path, comment)
     
     print("Now that we've loaded several matrices into the matrix store")
     print("(both as preloads and manually), we'll remove one of them.")
-    user_input = input("Press any key to continue.")
+    user_input = input("Press return key to continue.")
     
     # Test deletion of a matrix
     print("\nTesting removal of matrix from the matrix store\n")
     num_matrices_made =  mypy.num_matrices_created()
     end = num_matrices_made - 1
     filename = "Data/Out/nandYES.%s.store" %scalarTypeStr
-    mypy.matrix_store_info_to_file(0,end,os.path.join(os.path.dirname(__file__),filename),"Before Removed NAND")
+    mypy.fprint_store_info_for_matrixID_range(0,end,os.path.join(os.path.dirname(__file__),filename),"Before Removed NAND")
 
-    mypy.remove_matrix_from_mat_store_by_matrixID(nand_mID)
+    mypy.remove_matrix_from_store(nand_pID)
 	
     filename = "Data/Out/nandNO.%s.store" %scalarTypeStr
     filename_json = "Data/Out/temp.%s.json" %scalarTypeStr
-    print("\nDeleting the NAND matrix with matrixID", nand_mID,"from store, which had been read from %s\n"  %filename_json)
-    mypy.matrix_store_info_to_file(0,end,os.path.join(os.path.dirname(__file__),filename),"Removed NAND")
+    print("\nDeleting the NAND matrix with packedID", nand_pID,"from store, which had been read from %s\n"  %filename_json)
+    mypy.fprint_store_info_for_matrixID_range(0,end,os.path.join(os.path.dirname(__file__),filename),"Removed NAND")
 
     comment = "hash chain after removal"
     filename = "Data/Out/hashChain.afterMatrixRemove"
     out_path =  os.path.join(os.path.dirname(__file__),filename)
-    mypy.matrix_hash_chain_info_to_file(hashID, out_path, comment)
+    mypy.fprint_matrix_hash_chain_info(hashID, out_path, comment)
 
     print("We can also check the operations store and remove any operation")
     print("that has the removed matrix as one of its inputs.")
-    user_input = input("Press any key to continue.")
+    user_input = input("Press return key to continue.")
     
     mypy.list_op_names()
     
@@ -340,32 +357,31 @@ if __name__ == '__main__':
     mypy.op_store_report("stdout")
     
     # print op store hash chain for "SUM"
-    op_name = "SUM"
-    
     # get hash for a operation record and print the hash chain
-    sum_hashID = mypy.op_hashID_by_matrixIDs(in1_test_sum_mID,in2_test_sum_mID,op_name)
+    op_type = mypy.get_op_type_from_string_name("SUM");
+    sum_hashID = mypy.hash_from_op(in1_test_sum_pID,in2_test_sum_pID,op_type)
     if (sum_hashID == -1):
         print("invalid matrixID requested for op hash chain")
     else:
         mypy.op_hash_chain_info_to_screen(sum_hashID, "op hash chain before deletion")
         
     # delete the first input matrix
-    mypy.remove_matrix_from_mat_store_by_matrixID(in1_test_sum_mID)
-    print("deleting matrix with matrixID", in1_test_sum_mID)
+    mypy.remove_matrix_from_store(in1_test_sum_pID)
+    print("deleting matrix with packedID", in1_test_sum_pID)
     
     # traverse the op_hash_chain by trying some new sums
-    # test1_mID = mypy.matrix_add_matrixID(samp4_mID,samp4_mID)
-    # test2_mID = mypy.matrix_add_matrixID(test1_mID,samp4_mID)
-    # test3_mID = mypy.matrix_add_matrixID(test2_mID,test1_mID)
+    # test1_pID = mypy.matrix_add(samp4_pID,samp4_pID)
+    # test2_pID = mypy.matrix_add(test1_pID,samp4_pID)
+    # test3_pID = mypy.matrix_add(test2_pID,test1_pID)
     
-    # set a hold on a matrix by matrixID to see if it is immune to cleaning
-    print("The matrixID of matrix to be held is", adj_mID)
-    mypy.set_hold_matrix_from_matrixID(adj_mID)
+    # set a hold on a matrix by packedID to see if it is immune to cleaning
+    print("The packedID of matrix to be held is", adj_pID)
+    mypy.set_hold_matrix(adj_pID)
     
     # clean the matrix store and print it again
-    mypy.clean_matrix_store()
+    mypy.clean_matrix_storage()
     filename = "Data/Out/nandNOcleaned.%s.store" %scalarTypeStr
-    mypy.matrix_store_info_to_file(0,end,os.path.join(os.path.dirname(__file__),filename),"Removed NAND and cleaned matrix store")
+    mypy.fprint_store_info_for_matrixID_range(0,end,os.path.join(os.path.dirname(__file__),filename),"Removed NAND and cleaned matrix store")
 
     # clean the op store 
     for hash in range(1<<op_store_exp):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -62,8 +63,15 @@ import numpy as np
 import random
 from ctypes import *
 
+##
+# \file circulant.py
+#
+# \brief This sample program creates a random circulant matrix.
+#
+# Circulant matrices compress nicely using LARC.
+
 if __name__ == '__main__':
-	# This version references matrices by matrixID instead of pointers
+	# This version references matrices by packedID instead of pointers
 	
     print("This code tests some basic matrix building and reading routines\n")
 
@@ -71,11 +79,11 @@ if __name__ == '__main__':
     mat_store_exp = 26
     op_store_exp = 24
     max_level = 10
-    rnd_sig_bits = -1   # default value
-    trunc_to_zero_bits = -1  # default value
+    regionbitparam = -1   # default value
+    zeroregionbitparam = -1  # default value
 
 
-    ##  EXPLAIN VERBOSITY
+    #*  EXPLAIN VERBOSITY
     # verbose = 0 # SILENT
     verbose = 1 # BASIC
     # verbose = 2 # CHATTY
@@ -85,7 +93,7 @@ if __name__ == '__main__':
     if (verbose > 1):
         mypy.create_report_thread(1800)
 
-    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
+    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,regionbitparam,zeroregionbitparam,verbose)
 
     scalarTypeStr = mypy.cvar.scalarTypeStr
 
@@ -103,9 +111,11 @@ if __name__ == '__main__':
 
     if scalarTypeStr in ('Integer', 'MPInteger'):
         randVals = [ random.randrange(0,10001) for i in range(dim_whole)]
-    elif scalarTypeStr in ('Complex' or 'MPComplex' or 'MPRatComplex'):
+    elif scalarTypeStr == 'Boolean':
+        randVals = [ random.randrange(0,2) for i in range(dim_whole)]
+    elif scalarTypeStr in ('Complex', 'MPComplex', 'MPRatComplex'):
         randVals = [ np.complex(random.random(),random.random()) for i in range(dim_whole)]
-    elif scalarTypeStr in ('Real' or 'MPReal' or'MPRational'):
+    elif scalarTypeStr in ('Real', 'MPReal', 'MPRational', 'Clifford', 'Upper', 'Lower'):
         randVals = [ random.random() for i in range(dim_whole)]
     else:
         raise Exception('Do not know how to build matrix for type %s.' %scalarTypeStr)
@@ -118,14 +128,8 @@ if __name__ == '__main__':
         b.insert(0,b.pop(-1))
     #print("a: ", a)
     amat = np.matrix(a)
-    alist = amat.reshape(-1).tolist()[0]
-    #print(alist)
-    arr = mypy.map_to_str(alist, scalarTypeStr)
-    #print('arr:', mypy.str_scalarTypeStrArray(arr, len(alist)))
-
-    # creating or finding the matrix associated with the array
-    serial = mypy.row_major_list_to_store_matrixID(arr, level, level, dim_whole)
+    serial = mypy.add_numpy_matrix_to_matrix_store(amat)
     filename_json = "Data/Out/circulant.lev%d.%s.json" %(level,scalarTypeStr)
-    # mypy.print_naive_by_matID(serial)
+    # mypy.print_naive(serial)
     # print("\n")
-    mypy.write_larcMatrix_file_by_matID(serial,os.path.join(os.path.dirname(__file__),filename_json))
+    mypy.fprint_larcMatrixFile(serial,os.path.join(os.path.dirname(__file__),filename_json))

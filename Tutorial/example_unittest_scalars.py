@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 # NOTE: to run on command line
-#   python3 -m unittest -v test_unittest_matmath
+#   python3 -m unittest -v example_unittest_scalars.py
 # To run individual test classes from the module, do (for example) 
-#   python3 -m unittest -v test_unittest_matmath.TestMatrixMaxnorm
+#   python3 -m unittest -v example_unittest_scalars.TestMatrixMaxnorm
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -18,6 +18,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -55,7 +56,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -69,6 +70,15 @@ import math
 import unittest
 
 
+##
+# \file example_unittest_scalars.py
+#
+# \brief This contains a sample set of unittests for scalars in LARC.
+#
+#  To use the python unittest module and run this code type:
+#  python3 -m unittest example_unittest_scalars.py
+#
+
 class TestMatrixMaxnorm(unittest.TestCase):
 
     @classmethod
@@ -78,7 +88,7 @@ class TestMatrixMaxnorm(unittest.TestCase):
     def setUp(self):
         # Define string for use in formating filenames
         # (cvar is in pylarc)
-        self.scalarType = myp.cvar.scalarTypeStr
+        self.scalarTypeStr = myp.cvar.scalarTypeStr
 
     def test_twobytwo_doubling(self):
         level = 1
@@ -86,17 +96,17 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26,24,10,-1,-1,1)
-        initialize_larc(26,24,10,-1,-1,0)   # run quiet
+        myp.initialize_larc(26,24,10,-1,-1,0)   # run quiet
 
-        if self.scalarType in ("Integer", "MPInteger"):
+        if self.scalarTypeStr in ("Integer", "MPInteger"):
             arr_a = [4, 0, 0, 3]
             arr_b = [8, 0, 0, 6]
         else:
             arr_a = [.75, 0, 0, .125]
             arr_b = [1.5, 0, 0, .25]
-        a_ID = row_major_list_to_store_matrixID(myp.map_to_str(arr_a, self.scalarType), level, level, dim_whole)
-        b_ID = row_major_list_to_store_matrixID(myp.map_to_str(arr_b, self.scalarType), level, level, dim_whole)
-        self.assertEqual(matrix_add_matrixID(a_ID, a_ID), b_ID)
+        a_ID = myp.row_major_list_to_store(myp.map_to_str(arr_a, self.scalarTypeStr), level, level, dim_whole)
+        b_ID = myp.row_major_list_to_store(myp.map_to_str(arr_b, self.scalarTypeStr), level, level, dim_whole)
+        self.assertEqual(myp.matrix_add(a_ID, a_ID), b_ID)
 
     def test_twobytwo_subtraction(self):
         level = 1
@@ -104,17 +114,17 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26,24,10,-1,-1,1)
-        initialize_larc(26,24,10,-1,-1,0)    # run quiet
+        myp.initialize_larc(26,24,10,-1,-1,0)    # run quiet
 
-        if self.scalarType in ("Integer", "MPInteger"):
+        if self.scalarTypeStr in ("Integer", "MPInteger"):
             arr_a = [4, 0, 0, 3]
             arr_b = [8, 0, 0, 6]
         else:
             arr_a = [.75, 0, 0, .125]
             arr_b = [1.5, 0, 0, .25]
-        a_ID = row_major_list_to_store_matrixID(myp.map_to_str(arr_a, self.scalarType), level, level, dim_whole)
-        b_ID = row_major_list_to_store_matrixID(myp.map_to_str(arr_b, self.scalarType), level, level, dim_whole)
-        self.assertEqual(matrix_diff_matrixID(b_ID, a_ID), a_ID)
+        a_ID = myp.row_major_list_to_store(myp.map_to_str(arr_a, self.scalarTypeStr), level, level, dim_whole)
+        b_ID = myp.row_major_list_to_store(myp.map_to_str(arr_b, self.scalarTypeStr), level, level, dim_whole)
+        self.assertEqual(myp.matrix_diff(b_ID, a_ID), a_ID)
 
     def test_twobytwo_negation(self):
         level = 1
@@ -122,47 +132,47 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #     initialize_larc(26,24,10,-1,-1,1)
-        initialize_larc(26,24,10,-1,-1,0)    # run quiet
+        myp.initialize_larc(26,24,10,-1,-1,0)    # run quiet
 
-        if self.scalarType in ("Integer", "MPInteger"):
+        if self.scalarTypeStr in ("Integer", "MPInteger"):
             arr_a = [4, 0, 0, 3]
             arr_b = [8, 0, 0, 6]
         else:
             arr_a = [.75, 0, 0, .125]
             arr_b = [1.5, 0, 0, .25]
-        a_ID = row_major_list_to_store_matrixID(myp.map_to_str(arr_a, self.scalarType), level, level, dim_whole)
-        zero_ID = get_zero_matrixID(level, level)
-        self.assertEqual(matrix_diff_matrixID(a_ID, a_ID), zero_ID)
+        a_ID = myp.row_major_list_to_store(myp.map_to_str(arr_a, self.scalarTypeStr), level, level, dim_whole)
+        zero_ID = myp.get_zero_pID(level, level)
+        self.assertEqual(myp.matrix_diff(a_ID, a_ID), zero_ID)
 
     def test_subtract_self(self):
         # with myp.stdout_redirected():
         #    initialize_larc(26,24,10,-1,-1,1)
-        initialize_larc(26,24,10,-1,-1,0)   # run quiet
+        myp.initialize_larc(26,24,10,-1,-1,0)   # run quiet
 
-        if self.scalarType in ("Integer", "MPInteger"):
-            mID = get_valID_from_valString("40")
+        if self.scalarTypeStr in ("Integer", "MPInteger"):
+            pID = myp.get_valID_from_valString("40")
         else:
-            mID = get_valID_from_valString("0.4")
-        scalarM1 = get_valID_from_valString("-1")
-        neg_mID = matrix_mult_matrixID(scalarM1, mID)
-        zero = get_zero_matrixID(0, 0)
-        self.assertEqual(matrix_add_matrixID(neg_mID, mID), zero)
+            pID = myp.get_valID_from_valString("0.4")
+        scalarM1 = myp.get_valID_from_valString("-1")
+        neg_pID = myp.matrix_mult(scalarM1, pID)
+        zero = myp.get_zero_pID(0, 0)
+        self.assertEqual(myp.matrix_add(neg_pID, pID), zero)
 
-    @unittest.skipUnless(myp.cvar.scalarTypeStr in ("Real", "Complex"), "ScalarType must be Real or Complex")
+    @unittest.skipUnless(myp.cvar.scalarTypeStr in ("Real", "Complex", "MPReal", "MPComplex", "MPRational", "MPRatComplex"), "ScalarType must be real or complex ")
     def test_zeroBitThresh_read_below(self):
         """
-        when zeroBitThresh = t anything y with 0<=y<2^t will be zero.
-        in particular, 2^t - 2^(t+1)
+        when zeroBitThresh = z any scalar y with abs(y) < 2^(-z-1) will be
+        in the zero region in particular, y = 2^(-z-2)
         """
         zeroBitThresh = 3
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, -1, zeroBitThresh,1)
-        initialize_larc(26, 24, 10, -1, zeroBitThresh,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, -1, zeroBitThresh,0)  # run quiet
 
-        small = 1.0/(2**(zeroBitThresh+1))
-        smallID = get_valID_from_valString(myp.value_to_string(small, self.scalarType))
-        zero = get_zero_matrixID(0, 0)
+        small = 1.0/(2**(zeroBitThresh+2))
+        smallID = myp.get_valID_from_valString(myp.value_to_string(small, self.scalarTypeStr))
+        zero = myp.get_zero_pID(0, 0)
         self.assertEqual(smallID, zero)
 
     @unittest.skipUnless(myp.cvar.scalarTypeStr in ("Real", "Complex"), "ScalarType must be Real or Complex")
@@ -174,11 +184,11 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, -1, zeroBitThresh,1)
-        initialize_larc(26, 24, 10, -1, zeroBitThresh,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, -1, zeroBitThresh,0)  # run quiet
 
         notSmall = 1.0/(2**zeroBitThresh)
-        notSmallID = get_valID_from_valString(myp.value_to_string(notSmall, self.scalarType))
-        zero = get_zero_matrixID(0, 0)
+        notSmallID = myp.get_valID_from_valString(myp.value_to_string(notSmall, self.scalarTypeStr))
+        zero = myp.get_zero_pID(0, 0)
         self.assertNotEqual(notSmallID, zero)
 
     @unittest.skipUnless(myp.cvar.scalarTypeStr in ("Real", "Complex"), "ScalarType must be Real or Complex")
@@ -190,11 +200,11 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, -1, zeroBitThresh,1)
-        initialize_larc(26, 24, 10, -1, zeroBitThresh,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, -1, zeroBitThresh,0)  # run quiet
 
         notSmall = 3.0/(2**(zeroBitThresh+1))
-        notSmallID = get_valID_from_valString(myp.value_to_string(notSmall, self.scalarType))
-        zero = get_zero_matrixID(0, 0)
+        notSmallID = myp.get_valID_from_valString(myp.value_to_string(notSmall, self.scalarTypeStr))
+        zero = myp.get_zero_pID(0, 0)
         self.assertNotEqual(notSmallID, zero)
 
     @unittest.skipUnless(myp.cvar.scalarTypeStr in ("Real", "Complex"), "ScalarType must be Real or Complex")
@@ -215,13 +225,13 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, sighash,-1,1)
-        initialize_larc(26, 24, 10, sighash,-1,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, sighash,-1,0)  # run quiet
 
-        oneID = get_valID_from_valString("1")
+        oneID = myp.get_valID_from_valString("1")
         m = 1 + 1.0/(2**(sighash+2))
-        mID = get_valID_from_valString(myp.value_to_string(m, self.scalarType))
+        pID = myp.get_valID_from_valString(myp.value_to_string(m, self.scalarTypeStr))
 
-        self.assertEqual(mID, oneID)
+        self.assertEqual(pID, oneID)
 
     @unittest.skipUnless(myp.cvar.scalarTypeStr in ("Real", "Complex"), "ScalarType must be Real or Complex")
     def test_sighash_read_roundUp(self):
@@ -242,13 +252,13 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, sighash,-1,1)
-        initialize_larc(26, 24, 10, sighash,-1,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, sighash,-1,0)  # run quiet
 
-        oneID = get_valID_from_valString("1")
+        oneID = myp.get_valID_from_valString("1")
         m = 1 + 1.0/(2**sighash)
-        mID = get_valID_from_valString(myp.value_to_string(m, self.scalarType))
+        pID = myp.get_valID_from_valString(myp.value_to_string(m, self.scalarTypeStr))
 
-        self.assertNotEqual(mID, oneID)
+        self.assertNotEqual(pID, oneID)
 
     @unittest.skipUnless(myp.cvar.scalarTypeDef in ("Real", "Complex"), "ScalarType must be Real or Complex")
     def test_sighash_read_noRound(self):
@@ -268,13 +278,13 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, sighash,-1,1)
-        initialize_larc(26, 24, 10, sighash,-1,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, sighash,-1,0)  # run quiet
 
-        oneID = get_valID_from_valString("1")
+        oneID = myp.get_valID_from_valString("1")
         m = 1 - 1.0/(2**(sighash+1))
-        mID = get_valID_from_valString(myp.value_to_string(m, self.scalarType))
+        pID = myp.get_valID_from_valString(myp.value_to_string(m, self.scalarTypeStr))
 
-        self.assertEqual(mID, oneID)
+        self.assertEqual(pID, oneID)
 
     @unittest.skipUnless(myp.cvar.scalarTypeStr in ("Real", "Complex"), "ScalarType must be Real or Complex")
     def test_sighash_read_round(self):
@@ -296,13 +306,13 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, sighash,-1,1)
-        initialize_larc(26, 24, 10, sighash,-1,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, sighash,-1,0)  # run quiet
 
-        oneID = get_valID_from_valString("1")
+        oneID = myp.get_valID_from_valString("1")
         m = 1 - 1.0/(2**(sighash))
-        mID = get_valID_from_valString(myp.value_to_string(m, self.scalarType))
+        pID = myp.get_valID_from_valString(myp.value_to_string(m, self.scalarTypeStr))
 
-        self.assertNotEqual(mID, oneID)
+        self.assertNotEqual(pID, oneID)
 
     # @unittest.skipUnless(myp.cvar.scalarTypeStr in ("Real", "Complex"), "ScalarType must be Real or Complex")
     @unittest.skipIf(True, "Not sure why sqrt2*sqrt2 = 2.0 in floating point")
@@ -313,12 +323,12 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, -1,-1,1)
-        initialize_larc(26, 24, 10, -1,-1,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, -1,-1,0)  # run quiet
 
-        sqrt2ID = get_valID_from_valString(myp.value_to_string(math.sqrt(2), self.scalarType))
-        twoID = get_valID_from_valString("2")
+        sqrt2ID = myp.get_valID_from_valString(myp.value_to_string(math.sqrt(2), self.scalarTypeStr))
+        twoID = myp.get_valID_from_valString("2")
 
-        self.assertEqual(matrix_mult_matrixID(sqrt2ID, sqrt2ID), twoID)
+        self.assertEqual(myp.matrix_mult(sqrt2ID, sqrt2ID), twoID)
 
     @unittest.skipIf(myp.cvar.scalarTypeStr in ("Integer", "MPInteger"), "ScalarType must not be Integer or MPInteger")
     def test_sqrt2_formula_works(self):
@@ -328,23 +338,23 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, -1,-1,1)
-        initialize_larc(26, 24, 10, -1,-1,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, -1,-1,0)  # run quiet
 
-        halfID = get_valID_from_valString(myp.value_to_string(0.5, self.scalarType))
-        sqrt2ID = get_valID_from_valString(myp.value_to_string(math.sqrt(2), self.scalarType))
-        doubleID = matrix_add_matrixID(sqrt2ID, sqrt2ID)
-        resultID = matrix_mult_matrixID(halfID, doubleID)
+        halfID = myp.get_valID_from_valString(myp.value_to_string(0.5, self.scalarTypeStr))
+        sqrt2ID = myp.get_valID_from_valString(myp.value_to_string(math.sqrt(2), self.scalarTypeStr))
+        doubleID = myp.matrix_add(sqrt2ID, sqrt2ID)
+        resultID = myp.matrix_mult(halfID, doubleID)
         failure_msg = "matrices displayed above"
         if resultID != sqrt2ID:
             print("Failure in test_sqrt2_formula_works - printing relevant matrices.")
             print("Half matrix:")
-            print_naive_by_matID(halfID)
+            myp.print_naive(halfID)
             print("Sqrt2 matrix:")
-            print_naive_by_matID(sqrt2ID)
+            myp.print_naive(sqrt2ID)
             print("Double Sqrt2 matrix:")
-            print_naive_by_matID(doubleID)
+            myp.print_naive(doubleID)
             print("Result matrix:")
-            print_naive_by_matID(resultID)
+            myp.print_naive(resultID)
         self.assertEqual(resultID, sqrt2ID, failure_msg)
 
     @unittest.skipUnless(myp.cvar.scalarTypeStr in ("Real", "Complex"), "ScalarType must be Real or Complex")
@@ -355,10 +365,10 @@ class TestMatrixMaxnorm(unittest.TestCase):
 
         # with myp.stdout_redirected():
         #    initialize_larc(26, 24, 10, -1,-1,1)
-        initialize_larc(26, 24, 10, -1,-1,0)  # run quiet
+        myp.initialize_larc(26, 24, 10, -1,-1,0)  # run quiet
 
-        halfID = get_valID_from_valString(myp.value_to_string(0.5, self.scalarType))
-        resultID = matrix_mult_matrixID(myp.cvar.matID_inv_sqrt_2, myp.cvar.matID_inv_sqrt_2)
+        halfID = myp.get_valID_from_valString(myp.value_to_string(0.5, self.scalarTypeStr))
+        resultID = myp.matrix_mult(myp.cvar.packedID_inv_sqrt_2, myp.cvar.packedID_inv_sqrt_2)
         self.assertEqual(resultID, halfID)
 
 

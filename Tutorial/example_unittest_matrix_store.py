@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
 from __future__ import print_function
 
@@ -62,6 +63,16 @@ import MyPyLARC as myp
 from ctypes import *
 import unittest
 
+##
+# \file example_unittest_matrix_store.py
+#
+# \brief This contains unittests for various matrix
+# building and access operations.
+#
+# To use the python unittest module and run this code type:
+#   python3 -m unittest example_unittest_matrix_store.py
+
+
 class TestMacroFunctions(unittest.TestCase):
 
     @classmethod
@@ -69,12 +80,12 @@ class TestMacroFunctions(unittest.TestCase):
         # in fear of memory leaks, we'll run this once per class. 
         # with myp.stdout_redirected():
         #    initialize_larc(26,24,10,-1,-1,1)
-        initialize_larc(26,24,10,-1,-1,0)  # run quiet
+        myp.initialize_larc(26,24,10,-1,-1,0)  # run quiet
         
     def setUp(self):
         # Define string for use in formating filenames
         # (cvar is in pylarc)
-        self.scalarType = myp.cvar.scalarTypeStr
+        self.scalarTypeStr = myp.cvar.scalarTypeStr
 
     def test_row_level(self):
         """
@@ -82,8 +93,8 @@ class TestMacroFunctions(unittest.TestCase):
         """
         row_level = 3
         col_level = 4
-        randMatID = myp.matrix_random_matrixID(self.scalarType, row_level, col_level, 0, 100)
-        self.assertEqual(matrix_row_level_matrixID(randMatID), row_level)
+        randMatID = myp.matrix_random_matrixID(self.scalarTypeStr, row_level, col_level, 0, 100)
+        self.assertEqual(myp.matrix_row_level(randMatID), row_level)
 
     def test_col_level(self):
         """
@@ -91,8 +102,8 @@ class TestMacroFunctions(unittest.TestCase):
         """
         row_level = 3
         col_level = 4
-        randMatID = myp.matrix_random_matrixID(self.scalarType, row_level, col_level, 0, 100)
-        self.assertEqual(matrix_row_level_matrixID(randMatID), row_level)
+        randMatID = myp.matrix_random_matrixID(self.scalarTypeStr, row_level, col_level, 0, 100)
+        self.assertEqual(myp.matrix_row_level(randMatID), row_level)
 
     def test_sub_matrix(self):
         """
@@ -100,11 +111,11 @@ class TestMacroFunctions(unittest.TestCase):
         """
         row_level = 3
         col_level = 3
-        randMatID = myp.matrix_random_matrixID(self.scalarType, row_level, col_level, 0, 100, .5)
-        subMatID = matrix_sub_matrixID(randMatID, 0)
-        #print_naive_by_matID(randMatID)
-        #print_naive_by_matID(subMatID)
-        self.assertEqual(matrix_row_level_matrixID(subMatID), matrix_row_level_matrixID(randMatID)-1)
+        randMatID = myp.matrix_random_matrixID(self.scalarTypeStr, row_level, col_level, 0, 100, .5)
+        subMatID = myp.get_pID_of_indexed_submatrix(randMatID, 0)
+        #print_naive(randMatID)
+        #print_naive(subMatID)
+        self.assertEqual(myp.matrix_row_level(subMatID), myp.matrix_row_level(randMatID)-1)
 
 
 
@@ -116,12 +127,12 @@ class TestMatrixGetMatrixIDFromPanel(unittest.TestCase):
         # in fear of memory leaks, we'll run this once per class. 
         # with myp.stdout_redirected():
         #    initialize_larc(26,24,10,-1,-1,1)
-        initialize_larc(26,24,10,-1,-1,0)  # run quiet
+        myp.initialize_larc(26,24,10,-1,-1,0)  # run quiet
 
     def setUp(self):
         # Define string for use in formating filenames
         # (cvar is in pylarc)
-        self.scalarType = myp.cvar.scalarTypeStr
+        self.scalarTypeStr = myp.cvar.scalarTypeStr
 
     def test_zero_already_present(self):
         """
@@ -129,9 +140,9 @@ class TestMatrixGetMatrixIDFromPanel(unittest.TestCase):
         should return the zero matrix of level 4.
         """
         level = 3
-        zeroMatID = myp.get_zero_matrixID(level, level)
-        bigZeroMatID = get_matID_from_four_subMatIDs(zeroMatID, zeroMatID, zeroMatID, zeroMatID, level+1, level+1)
-        self.assertEqual(bigZeroMatID, get_zero_matrixID(level+1, level+1))
+        zeroMatID = myp.get_zero_pID(level, level)
+        bigZeroMatID = myp.get_pID_from_four_sub_pIDs(zeroMatID, zeroMatID, zeroMatID, zeroMatID, level+1, level+1)
+        self.assertEqual(bigZeroMatID, myp.get_zero_pID(level+1, level+1))
 
     def test_rebuild_rand_matrix(self):
         """
@@ -139,9 +150,9 @@ class TestMatrixGetMatrixIDFromPanel(unittest.TestCase):
         matrix.
         """
         level = 4
-        randMatID = myp.matrix_random_matrixID(self.scalarType, level, level, 0, 100, .5)
-        subMatIDs = [matrix_sub_matrixID(randMatID, i) for i in range(4)]
-        rebuildRandMatID = get_matID_from_four_subMatIDs(*(subMatIDs + [level, level]))
+        randMatID = myp.matrix_random_matrixID(self.scalarTypeStr, level, level, 0, 100, .5)
+        subMatIDs = [myp.get_pID_of_indexed_submatrix(randMatID, i) for i in range(4)]
+        rebuildRandMatID = myp.get_pID_from_four_sub_pIDs(*(subMatIDs + [level, level]))
         self.assertEqual(randMatID, rebuildRandMatID)
 
     def test_row_vector(self):
@@ -150,9 +161,9 @@ class TestMatrixGetMatrixIDFromPanel(unittest.TestCase):
         """
         level = 4
         MATRIX_ID_INVALID = -1
-        zeroHalfVecID = myp.get_zero_matrixID(0, level-1)
-        zeroVecID = myp.get_zero_matrixID(0, level)
-        targetVecID = get_matID_from_four_subMatIDs(zeroHalfVecID, zeroHalfVecID, MATRIX_ID_INVALID, MATRIX_ID_INVALID, 0, level)
+        zeroHalfVecID = myp.get_zero_pID(0, level-1)
+        zeroVecID = myp.get_zero_pID(0, level)
+        targetVecID = myp.get_pID_from_four_sub_pIDs(zeroHalfVecID, zeroHalfVecID, MATRIX_ID_INVALID, MATRIX_ID_INVALID, 0, level)
         self.assertEqual(zeroVecID, targetVecID)
 
     def test_col_vector(self):
@@ -161,9 +172,9 @@ class TestMatrixGetMatrixIDFromPanel(unittest.TestCase):
         """
         level = 4
         MATRIX_ID_INVALID = -1
-        zeroHalfVecID = myp.get_zero_matrixID(level-1, 0)
-        zeroVecID = myp.get_zero_matrixID(level, 0)
-        targetVecID = get_matID_from_four_subMatIDs(zeroHalfVecID, MATRIX_ID_INVALID, zeroHalfVecID, MATRIX_ID_INVALID, level, 0)
+        zeroHalfVecID = myp.get_zero_pID(level-1, 0)
+        zeroVecID = myp.get_zero_pID(level, 0)
+        targetVecID = myp.get_pID_from_four_sub_pIDs(zeroHalfVecID, MATRIX_ID_INVALID, zeroHalfVecID, MATRIX_ID_INVALID, level, 0)
         self.assertEqual(zeroVecID, targetVecID)
 
 

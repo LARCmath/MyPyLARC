@@ -1,3 +1,0 @@
-rm output
-touch output
-for file in *.py; do echo $file >> output; python $file >> output; done

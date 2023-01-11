@@ -1,2 +1,185 @@
-Look at examples_roots_of_unity.py to see how to use preloading of
-selected scalars to enforce certain mathematical identities.
+If you are a new user of the LARC Linear Algebra via Recursive Compression
+math package and the MyPyLARC Tutorial and Example Package, then
+you might want to start by reading the file MyPyLARC/Tutorial/newuser_instructions
+and then running some of the python examples in this Tutorial directory.
+
+
+Contents of Directory MyPyLARC/Tutorial
+=======================================
+circulant.py
+   This sample program creates a random circulant matrix.  These matrices
+   compress well within LARC.
+  
+create_a_project.txt
+   Gives tips to the a user for creating their own project directory
+   and getting started writing their own application.
+
+create_larc_matrix_compression_graph.ipynb
+   This is a sample jupyter notebook routine that uses matplotlib
+   to create a graph showing the LARC compression for various
+   families of matrices.  A .png file of the output graph is placed
+   in the Data/Out subdirectory.
+
+Data
+  A subdirectory containing two subdirectories (In and Out) which
+  have respectively input data, and output data for various routines
+  in the Tutorial directory.
+
+examples_bounding_type.py
+  This sample program illustrates the use of the upper and lower bounding
+  types for probability calculations.
+
+examples_cleaning.py
+  This sample program illustrates removing (i.e., cleaning) a matrix
+  from the matrix store after it is no longer needed.
+
+examples_infoStore1.py
+  This sample program shows how to add metadata to the information
+  store and associated to a particular matrix.
+
+examples_infoStore2.py
+  This sample program shows how to read metadata from the information
+  store.
+    
+examples_localHash.py
+  This sample program shows the effects of LARC's locality hashes
+  SPR (Single-tile Probabilistic Retrieval) and
+  MAR (Multi-tile Assured Retrieval).
+  Locality hashes allow LARC to collapse nearly identical scalars together
+  which limits the number of distinct scalars, reduces memory needs,
+  minimizes the effects of limited precision, mimics symbolic computation,
+  and allows approximation methods.
+
+examples_logging.py
+  This sample program shows how to use logs to record the results of
+  a run.  With these commands the user would be able to save off input,
+  parameters, and results of experiments.  The program creates a
+  directory called "sample_log" that can be removed after you look at it.
+
+examples_math.py
+  This routine illustrates various matrix operations on both square
+  and nonsquare matrices.
+
+examples_precision.py
+  This routine tests for potential loss of precision caused by LARC's
+  snap to region representative scheme (and locality hashing).
+  It generates the 8th roots of unity, then checks to see if the
+  square of w, where  w = 2nd power of the 8th root of unity
+  is equal to i.
+
+examples_roots_unity.py
+  This routine generates the 24th roots of unity w, and then checks
+  for the appropriate closure under multiplication of the various
+  powers of w.  That is, it verifies that
+     matrixProduct(packedID(w^i),packedID(w^j)) = packedID(w^k)
+  where k congruent to i+j mod 24.
+
+example_unittest_matrix_store.py
+  This contains unittests for various matrix building and access operations.
+  To use the python unittest module and run this code type:
+    python3 -m unittest example_unittest_matrix_store.py
+
+example_unittest_op_store.py
+  This contains sample set of unittests for the operations store of LARC.
+  To use the python unittest module and run this code type:
+    python3 -m unittest example_unittest_op_store.py
+
+example_unittest_scalars.py
+  This contains sample set of unittests for scalars in LARC.
+  To use the python unittest module and run this code type:
+    python3 -m unittest example_unittest_scalars.py
+
+fft_nonParamFile_init.py
+  This illustrates how to initialize LARC with parameters selected
+  by the user.  The routine then has an example where matrices
+  are generated that have components in a block sparse representation
+  of the discrete Fourier transform.
+
+fft_paramFile_init.py
+  This illustrates how to initialize LARC by running code that checks
+  the available memory then selecting an appropriate set of parameters
+  from a stored file to use in initializing LARC.  The routine then
+  has an example where matrices are generated that have components in
+  a block sparse representation of the discrete Fourier transform.
+
+fft_toeplitz.py
+  This routine illustrates how two matrices which are each somewhat
+  compressible in LARC behave when multiplied.  The matrices used are
+  a permutation submatrices that we had from our block sparse
+  fast Fourier transform (FFT), and a random Toeplitz matrix.
+  The LARCsize of the product is returned.  
+
+list_of_LARC_functions
+  This is a list of all user-callable functions in LARC, sorted alphabetically.
+  The list is provided to help users search the LARC Doxygen documentation.
+
+newuser_instructions
+  Advice on getting started with LARC and MyPyLARC including a
+  suggested order to try the tutorials and compiling with different
+  scalar types.
+
+preloading_mults_pi.py
+  This routine illustrates the way that region size for the locality
+  hashes is used by LARC to minimize the number of scalars
+  that are creating by representing any scalar in a small region by
+  a single representative.
+  
+sample_larc_initialization_and_use.ipynb
+  This is a jupyter notebook file that shows how to initialize
+  larc and to run a few computations.
+
+sample_log
+   This is a directory that is created when you run  examples_logging.py
+   and can be deleted once you have seen what is created.
+
+test_block_diagonal.py
+  This program creates a matrix and returns the matrixIDs of the block
+  diagonal submatrices of that matrix.  It does testing for various
+  error conditions.
+
+test_hashstats.py
+  This lets the user see which statistics are collected when the LARC
+  src/larc.h has been modified to have the #define HASHSTATS uncommented.
+  The program repeats various matrix operations in LARC and then gives
+  the report on the hashchain lengths and other statistics.
+
+test_kronecker.py
+  This program creates kronecker products of various combinations of
+  matrices, row vectors, and column vectors.
+
+test_unittest_matmath.py
+  This is a collection of unit tests for the various matrix functions
+  in larc/src/matmath.c.
+  See also working_example_unittest.py
+
+toeplitz.py
+  This routine creates a random Toeplitz matrix of level 3.
+
+tut1_larc_overview.py
+  This program illustrates LARC initialization and some basic LARC operations.
+  
+tut2_reporting.py
+  This program prints out the matrix store report and the operations
+  store report and the rusage report.  This runs fine, but we need to
+  add some explanatory print statements.
+
+tut3_more_on_hashing.py
+  text to be added...
+
+tut4_matrix_build_and_io.py
+  This code tests some basic matrix reading and building routines.
+
+user_proj_matrix_symmetry.py
+  This provides the user with an example project.  It checks to see 
+  if a matrix is close to being symmetric by taking the difference
+  between a matrix and its transpose and seeing how close that
+  result is to the zero matrix using a norm function.
+
+user_proj_template.py
+  This is the skeleton of a routine that we eventually hope can be
+  used as a template for new code.  Right now, don't use it and copy
+  some routine that already works as your starting place.
+  See suggestions in create_a_project.txt
+
+working_example_unittest.py
+  This contains an example unit test, see also test_unittest_matmath.py

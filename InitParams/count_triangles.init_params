@@ -1,0 +1,74 @@
+{
+ "small": [
+  {
+   "matrix_exponent": 22,
+   "op_exponent": 19,
+   "max_level": 8,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
+   "report_interval_seconds": 180,
+   "min_memGiB_required": 5,
+   "verbose": 1
+  }
+ ],
+ "medium": [
+  {
+   "matrix_exponent": 25,
+   "op_exponent": 24,
+   "max_level": 16,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
+   "report_interval_seconds": 360,
+   "min_memGiB_required": 50,
+   "verbose": 1
+  }
+ ],
+ "large": [
+  {
+   "matrix_exponent": 31,
+   "op_exponent": 30,
+   "max_level": 32,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
+   "report_interval_seconds": 3600,
+   "min_memGiB_required": 500,
+   "verbose": 1
+  }
+ ],
+ "desktop": [
+  {
+   "matrix_exponent": 22,
+   "op_exponent": 19,
+   "max_level": 8,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
+   "report_interval_seconds": 360,
+   "min_memGiB_required": 50,
+   "verbose": 1
+  }
+ ],
+ "server": [
+  {
+   "matrix_exponent": 31,
+   "op_exponent": 30,
+   "max_level": 32,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
+   "report_interval_seconds": 3600,
+   "min_memGiB_required": 500,
+   "verbose": 1
+  }
+ ],
+ "debug": [
+  {
+   "matrix_exponent": 12,
+   "op_exponent": 10,
+   "max_level": 5,
+   "regionbitparam": 45,
+   "zeroregionbitparam": 45,
+   "report_interval_seconds": 180,
+   "min_memGiB_required": 5,
+   "verbose": 1
+  }
+ ]
+}

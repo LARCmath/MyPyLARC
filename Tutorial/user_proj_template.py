@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*################################################################
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*################################################################
 
  #Your_Project_template
  # Some example application "playgrounds" for eigen, fft, toeplitz
@@ -67,8 +68,17 @@ import MyPyLARC as mypy
 import numpy as np
 from ctypes import *
 
+
+##
+# \file user_proj_template.py
+#
+# \brief Eventually this will be a template for new code (don't use it yet).
+#
+# It is currently best to use the directions in create_a_project.txt
+
+
 if __name__ == '__main__':
-	# This version references matrices by matrixID instead of pointers
+	# This version references matrices by packedID instead of pointers
 	
     print("This code provides a template for using basic LARC routines \n")
 
@@ -81,18 +91,18 @@ if __name__ == '__main__':
     mat_store_exp = 26
     op_store_exp = 24
     max_level = 10
-    rnd_sig_bits = 40   # (default value -1 =>62 bits)
-    trunc_to_zero_bits = 20  # (default value -1 =>62 bits)
+    regionbitparam = 40
+    zeroregionbitparam = 20
     verbose = 1
 
     mypy.create_report_thread(1800)
-    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,rnd_sig_bits,trunc_to_zero_bits,verbose)
+    mypy.initialize_larc(mat_store_exp,op_store_exp,max_level,regionbitparam,zeroregionbitparam,verbose)
 
     print("mat_store_exp = ",mat_store_exp)
     print("op_store_exp = ",op_store_exp)
     print("max_level = ",max_level)
-    print("rnd_sig_bits = ",rnd_sig_bits,"; ( -1 implies a default 62 bits)")
-    print("trunc_to_zero_bits = ",trunc_to_zero_bits,"; ( -1 for  62 bits)")
+    print("regionbitparam = ",regionbitparam,"; ( '-1' gives a default value appropriate for the current scalarType)")
+    print("zeroregionbitparam = ",zeroregionbitparam,"; ( '-1' defaults to the same value as regionbitparam)")
     print("verbose = ",verbose)
 
     # scalarType is set at compile time (e.g. make TYPE=INTEGER) 

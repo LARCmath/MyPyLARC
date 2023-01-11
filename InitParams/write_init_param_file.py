@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
- ##################################################################
+ #*##############################################################*#
  #                                                                #
  # Copyright (C) 2014, Institute for Defense Analyses             #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
@@ -13,6 +13,7 @@
  #   - Steve Cuccaro (IDA-CCS)                                    #
  #   - John Daly (LPS)                                            #
  #   - John Gilbert (UCSB, IDA adjunct)                           #
+ #   - Mark Pleszkoch (IDA-CCS)                                   #
  #   - Jenny Zito (IDA-CCS)                                       #
  #                                                                #
  # Additional contributors are listed in "LARCcontributors".      #
@@ -50,7 +51,7 @@
  # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
  # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
  #                                                                #
- ##################################################################
+ #*##############################################################*#
 
 
 from __future__ import print_function
@@ -63,14 +64,20 @@ import MyPyLARC as myp
 from ctypes import *
 import json
 
+## \file write_init_param_file.py
+#
+# \brief This program creates a default parameter file for a project.
+#
+# The user may then edit the file to change parameters if desired.
+#
 
 if __name__ == '__main__':
 
 
-    ################################################################
-    ##   Get the name of the parameter file that you are writing  ##
-    ##   e.g. 'eigen.init_params'                                 ##
-    ################################################################
+    #*############################################################*#
+    #*   Get the name of the parameter file that you are writing  *#
+    #*   e.g. 'eigen.init_params'                                 *#
+    #*############################################################*#
     
     if 2 == len(sys.argv):
         param_file_name = sys.argv[1] 
@@ -81,10 +88,10 @@ if __name__ == '__main__':
         print("  python3 write_init_param_file.py my_app.init_params")
         sys.exit(1)
 
-    ######################################################################
-    ##  Create Python dictionary for sets of initialization parameters  ##
-    ##  for LARC Initialization of Matrix Store and Operation Stores    ##
-    ######################################################################
+    #*##################################################################*#
+    #*  Create Python dictionary for sets of initialization parameters  *#
+    #*  for LARC Initialization of Matrix Store and Operation Stores    *#
+    #*##################################################################*#
 
     data = { }
     data['small'] = []
@@ -92,8 +99,8 @@ if __name__ == '__main__':
         'matrix_exponent': 22,
         'op_exponent': 19, 
         'max_level': 8, 
-        'rnd_sig_bits': 45,
-        'trunc_to_zero_bits': 45,
+        'regionbitparam': -1,
+        'zeroregionbitparam': -1,
         'report_interval_seconds': 180,
         'min_memGiB_required': 5,
         'verbose': 1
@@ -103,8 +110,8 @@ if __name__ == '__main__':
         'matrix_exponent': 25,
         'op_exponent': 24, 
         'max_level': 10, 
-        'rnd_sig_bits': 52,
-        'trunc_to_zero_bits': 52,
+        'regionbitparam': -1,
+        'zeroregionbitparam': -1,
         'report_interval_seconds': 360,
         'min_memGiB_required': 50,
         'verbose': 1
@@ -114,8 +121,8 @@ if __name__ == '__main__':
         'matrix_exponent': 31,
         'op_exponent': 30, 
         'max_level': 32, 
-        'rnd_sig_bits': 60,
-        'trunc_to_zero_bits': 60,
+        'regionbitparam': -1,
+        'zeroregionbitparam': -1,
         'report_interval_seconds': 3600,
         'min_memGiB_required': 500,
         'verbose': 1
@@ -125,8 +132,8 @@ if __name__ == '__main__':
         'matrix_exponent': 22,
         'op_exponent': 19, 
         'max_level': 8, 
-        'rnd_sig_bits': 54,
-        'trunc_to_zero_bits': 54,
+        'regionbitparam': -1,
+        'zeroregionbitparam': -1,
         'report_interval_seconds': 360,
         'min_memGiB_required': 50,
         'verbose': 1
@@ -136,8 +143,8 @@ if __name__ == '__main__':
         'matrix_exponent': 31,
         'op_exponent': 30, 
         'max_level': 32, 
-        'rnd_sig_bits': -1,   # default value
-        'trunc_to_zero_bits': -1,  #default value
+        'regionbitparam': -1,   # default value
+        'zeroregionbitparam': -1,  #default value
         'report_interval_seconds': 3600,
         'min_memGiB_required': 500,
         'verbose': 1
@@ -147,8 +154,8 @@ if __name__ == '__main__':
         'matrix_exponent': 12,
         'op_exponent': 10, 
         'max_level': 5, 
-        'rnd_sig_bits': 45,   # default value
-        'trunc_to_zero_bits': 45,   # default value
+        'regionbitparam': 45,   # default value
+        'zeroregionbitparam': 45,   # default value
         'report_interval_seconds': 180,
         'min_memGiB_required': 5,
         'verbose': 1
@@ -163,7 +170,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
         
-    #### try to read a parameter file into a dictionary
+    #*** try to read a parameter file into a dictionary
     with open(param_file_name,'r') as init_params:
         init_param = json.load(init_params)
         print('The initialization parameters for running on a desktop are:')
@@ -171,8 +178,8 @@ if __name__ == '__main__':
             print('MatrixExponent: %d' %(param['matrix_exponent']))
             print('OpExponent: %d' %(param['op_exponent']))
             print('MaxLevel: %d' %(param['max_level']))
-            print('RoundSigBits: %d' %(param['rnd_sig_bits']))
-            print('TruncToZeroBits: %d' %(param['trunc_to_zero_bits']))
+            print('regionbitparam: %d' %(param['regionbitparam']))
+            print('zeroregionbitparam: %d' %(param['zeroregionbitparam']))
             print('ReportIntervalSeconds: %d' %(param['report_interval_seconds']))
             print('Minimum Memory Available in GiB Required: %d' %(param['min_memGiB_required']))
             print('Verbose: %d' %(param['verbose']))
@@ -183,8 +190,8 @@ if __name__ == '__main__':
             print('MatrixExponent: %d' %(param['matrix_exponent']))
             print('OpExponent: %d' %(param['op_exponent']))
             print('MaxLevel: %d' %(param['max_level']))
-            print('RoundSigBits: %d' %(param['rnd_sig_bits']))
-            print('TruncToZeroBits: %d' %(param['trunc_to_zero_bits']))
+            print('regionbitparam: %d' %(param['regionbitparam']))
+            print('zeroregionbitparam: %d' %(param['zeroregionbitparam']))
             print('ReportIntervalSeconds: %d' %(param['report_interval_seconds']))
             print('Minimum Memory Available in GiB Required: %d' %(param['min_memGiB_required']))
             print('Verbose: %d' %(param['verbose']))
@@ -195,8 +202,8 @@ if __name__ == '__main__':
             print('MatrixExponent: %d' %(param['matrix_exponent']))
             print('OpExponent: %d' %(param['op_exponent']))
             print('MaxLevel: %d' %(param['max_level']))
-            print('RoundSigBits: %d' %(param['rnd_sig_bits']))
-            print('TruncToZeroBits: %d' %(param['trunc_to_zero_bits']))
+            print('regionbitparam: %d' %(param['regionbitparam']))
+            print('zeroregionbitparam: %d' %(param['zeroregionbitparam']))
             print('ReportIntervalSeconds: %d' %(param['report_interval_seconds']))
             print('Minimum Memory Available in GiB Required: %d' %(param['min_memGiB_required']))
             print('Verbose: %d' %(param['verbose']))

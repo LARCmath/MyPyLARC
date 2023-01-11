@@ -1,11 +1,11 @@
 {
  "small": [
   {
-   "matrix_exponent": 22,
-   "op_exponent": 19,
-   "max_level": 8,
-   "rnd_sig_bits": 45,
-   "trunc_to_zero_bits": 45,
+   "matrix_exponent": 26,
+   "op_exponent": 24,
+   "max_level": 10,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
    "report_interval_seconds": 180,
    "min_memGiB_required": 5,
    "verbose": 1
@@ -13,11 +13,11 @@
  ],
  "medium": [
   {
-   "matrix_exponent": 25,
-   "op_exponent": 24,
-   "max_level": 10,
-   "rnd_sig_bits": 52,
-   "trunc_to_zero_bits": 52,
+   "matrix_exponent": 27,
+   "op_exponent": 25,
+   "max_level": 12,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
    "report_interval_seconds": 360,
    "min_memGiB_required": 50,
    "verbose": 1
@@ -28,8 +28,8 @@
    "matrix_exponent": 31,
    "op_exponent": 30,
    "max_level": 32,
-   "rnd_sig_bits": 60,
-   "trunc_to_zero_bits": 60,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
    "report_interval_seconds": 3600,
    "min_memGiB_required": 500,
    "verbose": 1
@@ -40,8 +40,8 @@
    "matrix_exponent": 22,
    "op_exponent": 19,
    "max_level": 8,
-   "rnd_sig_bits": 54,
-   "trunc_to_zero_bits": 54,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
    "report_interval_seconds": 360,
    "min_memGiB_required": 50,
    "verbose": 1
@@ -52,8 +52,8 @@
    "matrix_exponent": 31,
    "op_exponent": 30,
    "max_level": 32,
-   "rnd_sig_bits": -1,
-   "trunc_to_zero_bits": -1,
+   "regionbitparam": -1,
+   "zeroregionbitparam": -1,
    "report_interval_seconds": 3600,
    "min_memGiB_required": 500,
    "verbose": 1
@@ -64,8 +64,8 @@
    "matrix_exponent": 12,
    "op_exponent": 10,
    "max_level": 5,
-   "rnd_sig_bits": 45,
-   "trunc_to_zero_bits": 45,
+   "regionbitparam": 45,
+   "zeroregionbitparam": 45,
    "report_interval_seconds": 180,
    "min_memGiB_required": 5,
    "verbose": 1

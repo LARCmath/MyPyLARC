@@ -1,0 +1,24 @@
+BUG FIXES:
+
+ * updated calls to LARCmatrix write routines to use new versions.
+ * updated Tutorial functions using InfoStore to call correct LARC routines
+ * fixed format of complex constants in src/sycamore.c
+ * Makefile now creates MyPyLARC/lib directory if it does not exist.
+ * Makefile now links ncurses library rather than curses library.
+
+IMPROVEMENTS:
+ * updated Juypter notebook that creates LARC matrix compression graph.
+ * updated names of LARC functions to names for LARC version 2.1.
+ * no longer use functions that have matrix pointers as arguments, instead use
+   functions depending on packedIDs.
+ * updated Tutorial functions to work with additional scalarTypes
+ * updated Tutorial functions to indicated when they don't work with certain
+   scalarTypes, and to exit if MyPyLARC is compiled in those scalarTypes
+ * updated Tutorial functions to indicate that they might work poorly with
+   rational scalarTypes and to give user option to abort if MyPyLARC is
+   compiled with those scalarTypes
+
+ADDITIONS:
+ * expanded Sycamore_play project: added README.txt, sycamore_config.json,
+   sycamore_generate.py, numpy_run.py and sycamore_run.py 
+ * added list of LARC functions to Tutorial directory
