@@ -17,6 +17,9 @@ IMPROVEMENTS:
  * updated Tutorial functions to indicate that they might work poorly with
    rational scalarTypes and to give user option to abort if MyPyLARC is
    compiled with those scalarTypes
+ * updated copyright notice to read "2014-2024"
+ * updated Tutorial/list_of_LARC_functions with new and renamed LARC functions
+ * explanatory paper updated with new and renamed LARC functions
 
 ADDITIONS:
  * expanded Sycamore_play project: added README.txt, sycamore_config.json,

@@ -1,7 +1,61 @@
+#*################################################################
+#                                                                #
+# Copyright (C) 2014-2024, Institute for Defense Analyses        #
+# 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
+# This material may be reproduced by or for the US Government    #
+# pursuant to the copyright license under the clauses at DFARS   #
+# 252.227-7013 and 252.227-7014.                                 #
+#                                                                #
+# LARC : Linear Algebra via Recursive Compression                #
+# Authors:                                                       #
+#   - Steve Cuccaro (IDA-CCS)                                    #
+#   - John Daly (LPS)                                            #
+#   - John Gilbert (UCSB, IDA adjunct)                           #
+#   - Mark Pleszkoch (IDA-CCS)                                   #
+#   - Jenny Zito (IDA-CCS)                                       #
+#                                                                #
+# Additional contributors are listed in "LARCcontributors".      #
+#                                                                #
+# Questions: larc@super.org                                      #
+#                                                                #
+# All rights reserved.                                           #
+#                                                                #
+# Redistribution and use in source and binary forms, with or     #
+# without modification, are permitted provided that the          #
+# following conditions are met:                                  #
+#   - Redistribution of source code must retain the above        #
+#     copyright notice, this list of conditions and the          #
+#     following disclaimer.                                      #
+#   - Redistribution in binary form must reproduce the above     #
+#     copyright notice, this list of conditions and the          #
+#     following disclaimer in the documentation and/or other     #
+#     materials provided with the distribution.                  #
+#   - Neither the name of the copyright holder nor the names of  #
+#     its contributors may be used to endorse or promote         #
+#     products derived from this software without specific prior #
+#     written permission.                                        #
+#                                                                #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND         #
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,    #
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF       #
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE       #
+# DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER NOR        #
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,   #
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT   #
+# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;   #
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       #
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN      #
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR   #
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, #
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             #
+#                                                                #
+#*################################################################
+
 adjoint
 apply_function_to_matrix_values
+check_validity_one_input
+check_validity_two_input
 clean_info_store_hash_chain
-clean_matrix_hash_chain
 clean_matrix_storage
 clean_op_hash_chain
 clean_op_store
@@ -12,33 +66,50 @@ create_FFTMat
 create_invShufMat
 create_log_dir
 create_report_thread
-display_larc_settings
+debug_out_Clifford
+debug_out_complex
+debug_out_integer
+debug_out_mpc
+debug_out_mpfr
+debug_out_mpq
+debug_out_mpz
+debug_out_RatComplex
+debug_out_real
+debug_out_scalar
 empty_op_store
 equal_matrices_in_larcMatrix_files
+explain_hash_filters
+explain_hashing_for_snapping_scalars
+explain_hashing_lists
+explain_hashing_scalarTypes
+explain_hashing_uses_in_LARC
+explain_hash_statistics
 explain_level
 explain_matrix_and_operation_storage
+explain_multiplicative_Fibonacci_hash
 explain_scalar_techniques
 explain_scalarType
 explain_verbosity
-fprint_info_from_hash_chain
+fprint_info_hash_chain_info
 fprint_larcMatrixFile
-fprint_matrix_hash_chain_info
+fprint_larcMatrixFile_topLeftOrder
 fprint_matrix_nonzeros
 fprint_naive
+fprint_nonscalar_hash_chain_info
+fprint_scalar_hash_chain_info
 fprint_store_info_for_matrixID_range
 fprint_uniqScalar_file
 get_counts_square_matrices_by_level
-get_diag_hist
 get_exactString_scalar_from_pID_and_coords
 get_identity_pID
 get_iHadamard_pID
 get_info_hash
 get_info_type_from_string_name
 get_list_of_scalars_in_larcMatrixFile
-get_matID_from_oldMatID_newValString_and_coords
 get_matrix_with_single_nonzero_at_coords
 get_nonscalar_store_exp
 get_op_store_exp
+get_op_type_from_string_name
 get_pID_for_enum_const
 get_pID_from_array_of_four_sub_pIDs
 get_pID_from_four_sub_pIDs
@@ -49,14 +120,17 @@ get_regionbitparam
 get_scalarID_from_pID_and_coords
 get_scalar_store_exp
 get_scalar_value_string
+get_string_gmp_versions
 get_string_larc_version
 get_string_scalarType
 get_valID_from_valString
 get_zero_pID
+get_zerorealthresh
 get_zeroregionbitparam
 hash_from_info
 hash_from_matrix_subMatList
 hash_from_one_longdouble
+hash_from_op
 hash_from_two_longdoubles
 hash_pID
 iHadamard_times_matrix
@@ -82,15 +156,13 @@ matrix_diff
 matrix_element_with_maxNorm
 matrix_entrySquared
 matrix_hash_chain_length
-matrix_hash_chain_length
 matrix_hashstats
 matrixID_from_packedID
+matrix_is_identity
 matrix_is_invalid
 matrix_is_zero
 matrix_mult
 matrix_mult_clean
-matrix_read_larcMatrix_file_flatten_small_scalars_matrixID
-matrix_read_larcMatrix_file_zeroize_small_scalars_matrixID
 matrix_row_level
 matrix_saxpy
 matrix_store_report
@@ -106,17 +178,19 @@ num_matrices_in_store
 op_hash_chain_info_to_file
 op_hash_chain_info_to_screen
 op_hashstats
-op_store_report
+op_set
 op_store_report
 precision_testing
 principal_pow2_root_unity_pID
-print_info_from_hash_chain
+print_info_hash_chain_info
 print_larc_parameters_and_compile_options
 print_larc_version
-print_matrix_hash_chain_info
 print_naive
+print_nonscalar_hash_chain_info
 print_pow2_roots_unity
+print_scalar_hash_chain_info
 random_Boolean_matrix_from_count
+read_anyFormat_larcMatrixFile
 read_larcMatrixFile
 read_legacy_larcMatrixFile
 read_matrixMarketExchange_file
@@ -132,16 +206,13 @@ report_now_on_all_stores
 return_info_name
 row_major_list_to_store
 scalar_divide
+scalar_hash_chain_length
 scalar_mult
 scalar_store_count
-scratchVars_clear
-scratchVars_exitroutine
-scratchVars_init
 set_hold_matrix
 show_layout_hash_node
 show_layout_larc_matrix
 shutdown_larc
-square_matrix_elements
 stack
 traceID
 tracenorm

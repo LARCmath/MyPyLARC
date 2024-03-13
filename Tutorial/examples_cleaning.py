@@ -2,7 +2,7 @@
 
  #*################################################################
  #                                                                #
- # Copyright (C) 2014, Institute for Defense Analyses             #
+ # Copyright (C) 2014-2024, Institute for Defense Analyses        #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
  # This material may be reproduced by or for the US Government    #
  # pursuant to the copyright license under the clauses at DFARS   #
@@ -320,7 +320,7 @@ if __name__ == '__main__':
     comment = "hash chain before removal"
     filename = "Data/Out/hashChain.beforeMatrixRemove"
     out_path =  os.path.join(os.path.dirname(__file__),filename)
-    mypy.fprint_matrix_hash_chain_info(hashID, out_path, comment)
+    mypy.fprint_nonscalar_hash_chain_info(hashID, out_path, comment)
     
     print("Now that we've loaded several matrices into the matrix store")
     print("(both as preloads and manually), we'll remove one of them.")
@@ -343,7 +343,7 @@ if __name__ == '__main__':
     comment = "hash chain after removal"
     filename = "Data/Out/hashChain.afterMatrixRemove"
     out_path =  os.path.join(os.path.dirname(__file__),filename)
-    mypy.fprint_matrix_hash_chain_info(hashID, out_path, comment)
+    mypy.fprint_nonscalar_hash_chain_info(hashID, out_path, comment)
 
     print("We can also check the operations store and remove any operation")
     print("that has the removed matrix as one of its inputs.")

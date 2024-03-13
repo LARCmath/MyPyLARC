@@ -1,3 +1,55 @@
+/******************************************************************
+ * Copyright (C) 2014-2024, Institute for Defense Analyses        *
+ * 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           *
+ * This material may be reproduced by or for the US Government    *
+ * pursuant to the copyright license under the clauses at DFARS   *
+ * 252.227-7013 and 252.227-7014.                                 *
+ *                                                                *
+ * LARC (Linear Algebra via Recursive Compression)                *
+ * Authors:                                                       *
+ *   - Steve Cuccaro (IDA-CCS)                                    *
+ *   - John Daly (LPS)                                            *
+ *   - John Gilbert (UCSB, IDA adjunct)                           *
+ *   - Mark Pleszkoch (IDA-CCS)                                   *
+ *   - Jenny Zito (IDA-CCS)                                       *
+ *                                                                *
+ * Additional contributors are listed in "LARCcontributors".      *
+ *                                                                *
+ * Questions: larc@super.org                                      *
+ *                                                                *
+ * All rights reserved.                                           *
+ *                                                                *
+ * Redistribution and use in source and binary forms, with or     *
+ * without modification, are permitted provided that the          *
+ * following conditions are met:                                  *
+ *   - Redistribution of source code must retain the above        *
+ *     copyright notice, this list of conditions and the          *
+ *     following disclaimer.                                      *
+ *   - Redistribution in binary form must reproduce the above     *
+ *     copyright notice, this list of conditions and the          *
+ *     following disclaimer in the documentation and/or other     *
+ *     materials provided with the distribution.                  *
+ *   - Neither the name of the copyright holder nor the names of  *
+ *     its contributors may be used to endorse or promote         *
+ *     products derived from this software without specific prior *
+ *     written permission.                                        *
+ *                                                                *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND         *
+ * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,    *
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF       *
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE       *
+ * DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER NOR        *
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,   *
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT   *
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;   *
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       *
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN      *
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR   *
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, *
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             *
+ *                                                                *
+ *****************************************************************/
+
 Google carried out an experiment using the Sycamore quantum hardware.
 The experiment created a quantum state on 53 qubits with the intention
 of demonstrating quantum supremacy (a problem that can be done faster
@@ -90,3 +142,42 @@ sycamore_config.json - JSON file containing a Sycamore circuit. This file
 sycamore_run.py - Python 3 program to build the operator matrices corresponding
                   to the Sycamore circuit in "sycamore_config.json"
 
+
+
+BASIC INSTRUCTIONS
+=============
+How to run a Sycamore circuit simulation.
+Inside the top level MyPyLARC directory, compile in complex type
+   make TYPE=COMPLEX
+
+Then move into the Sycamore_play subdirectory.
+You can use the existing configuration file if you like:
+         sycamore_config.json 
+
+The configuration file sycamore_config.json contains
+the details of the Sycamore circuit you would like to simulate, e.g.
+    - number and arrangement of qubits,
+    - randomly generated X,Y,W 1-qubit gates for each cycle
+    - which simulation pattern to use for the 2-qubit S gate
+       (either [ABCD] "quantum supremacy" gate pattern
+      or the [EFGH] pattern, and
+    - number of simulation cycles to execute.
+
+If you want a different circuit configuration than what is
+currently in sycamore_config.json, then make changes in in
+the program sycamore_generate.py  and then run
+         python sycamore_generate.py.
+	 
+To run the simulation (which reads sycamore_config.json) type
+       python sycamore_run.py
+
+Output from the simulation during various steps are 
+saved in files in a subdirectory matrixFiles.
+
+The final density matrix (of size 2^n by 2^n, where n
+is the number of qubits) will be output in two formats.
+A file in LARC recursive format
+     matrixFiles/sycamore_full_circuit_matrix.json
+A file expressed in standard (row major) format 
+      matrixFiles/sycamore_row_by_row_dump.txt
+      

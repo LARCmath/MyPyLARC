@@ -2,7 +2,7 @@
 
  #*##############################################################*#
  #                                                                #
- # Copyright (C) 2014, Institute for Defense Analyses             #
+ # Copyright (C) 2014-2024, Institute for Defense Analyses        #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
  # This material may be reproduced by or for the US Government    #
  # pursuant to the copyright license under the clauses at DFARS   #
@@ -59,7 +59,7 @@ import os
 import glob
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__),"../src"))
-import MyPyLARC as myp
+import MyPyLARC as mypy
 from ctypes import *
 import json
 
@@ -109,13 +109,13 @@ if __name__ == '__main__':
     # In the Makefile you can compile with different scalarType values   #
     # Define string for using in formating filenames                     #
     #*##################################################################*#
-    scalarTypeStr = myp.cvar.scalarTypeStr
+    scalarTypeStr = mypy.cvar.scalarTypeStr
 
     #*##################################################*#
     #*   Find out if machine has a large amount of      *#
     #*   memory available so we can make bigger tables  *#
     #*##################################################*#
-    memory_available = myp.memory_available_GiB()
+    memory_available = mypy.memory_available_GiB()
     if (verbose > 0):
         print("\nThe memory available is %ld GiB" %memory_available)
         print("We will use this to select which computing_env to read from parameter file.")
@@ -146,7 +146,7 @@ if __name__ == '__main__':
         print("In the following baseline usage report")
         print("RSS, resident set size, refers to size of the process held in RAM.")
         print("HASHSTATS: hash occupancy means, variances and crash resolution chain lengths")
-        myp.memory_and_time_report(0, "stdout")
+        mypy.memory_and_time_report(0, "stdout")
 
     # read the parameter file into a python dictionary
     #with open('../InitParams/REPLACE_THIS.init_params','r') as init_file:
@@ -180,7 +180,7 @@ if __name__ == '__main__':
             print("      The verbose key is:  0=SILENT, 1=BASIC, 2=CHATTY, 3=DEBUG.")
 
     # initialize LARC
-    myp.initialize_larc(matrix_exponent,op_exponent,max_level,regionbitparam,zeroregionbitparam,verbose)
+    mypy.initialize_larc(matrix_exponent,op_exponent,max_level,regionbitparam,zeroregionbitparam,verbose)
 
     print("Finished creating LARC matrix and op stores and loading basic matrices.\n")
     print("stopHogging check to see if program is too large to occur once every 10 minutes.\n")
@@ -192,23 +192,23 @@ if __name__ == '__main__':
     # verbose = 0
     # n = 4
     # print("\nRunning code to produce the %d-th roots of unity." %n)
-    # myp.print_n_th_roots_of_unity(4,verbose)
-    # # myp.print_n_th_roots_of_unity(24,verbose)
+    # mypy.print_n_th_roots_of_unity(4,verbose)
+    # # mypy.print_n_th_roots_of_unity(24,verbose)
 
     #*################################################*#
     # load principal root of unity and return matrixID #
     #*################################################*#
     # verbose = 0
     # print("\nRunning code to produce the matrixID for the n-th principal root of unity.")
-    # p1_mID = myp.principal_n_th_root_of_unity_matID(1, verbose)
+    # p1_mID = mypy.principal_n_th_root_of_unity_matID(1, verbose)
     # print("principal nth root of unity for n=1 has matrixID %d" %p1_mID)
-    # p2_mID = myp.principal_n_th_root_of_unity_matID(2, verbose)
+    # p2_mID = mypy.principal_n_th_root_of_unity_matID(2, verbose)
     # print("principal nth root of unity for n=2 has matrixID %d" %p2_mID)
-    # p3_mID = myp.principal_n_th_root_of_unity_matID(3, verbose)
+    # p3_mID = mypy.principal_n_th_root_of_unity_matID(3, verbose)
     # print("principal nth root of unity for n=3 has matrixID %d" %p3_mID)
-    # p4_mID = myp.principal_n_th_root_of_unity_matID(4, verbose)
+    # p4_mID = mypy.principal_n_th_root_of_unity_matID(4, verbose)
     # print("principal nth root of unity for n=4 has matrixID %d" %p4_mID)
-    # # p24_mID = myp.principal_n_th_root_of_unity_matID(24, verbose)
+    # # p24_mID = mypy.principal_n_th_root_of_unity_matID(24, verbose)
     # # print("principal nth root of unity for n=24 has matrixID %d" %p24_mID)
 
 
@@ -229,21 +229,21 @@ if __name__ == '__main__':
     if (verbose>1):
         print("The length of the array is %d" %len(n_array))
     for k in range(n):
-        n_array[k]  = myp.k_th_power_of_n_th_root_of_unity_pID(k,n,call_verbose)
+        n_array[k]  = mypy.k_th_power_of_n_th_root_of_unity_pID(k,n,call_verbose)
     print("\nHere is the array of the %dth roots of unity:" %n)   
-    print(list(map(myp.matrixID_from_packedID,n_array)))
+    print(list(map(mypy.matrixID_from_packedID,n_array)))
     if (verbose>1):
         print("\nThe stored values of these roots are:")
         print("")
         for k in range(n):
-           myp.print_naive(n_array[k])
+           mypy.print_naive(n_array[k])
            print("")
     print("\nNow we can look to see if multiplication is closed, by looking")
     print("at the matrixIDs of products of pairs of these roots.")
     success = 1
     for k in range(n):
         for j in range(k+1):
-            my_packedID = myp.matrix_mult(n_array[j],n_array[k])
+            my_packedID = mypy.matrix_mult(n_array[j],n_array[k])
             flag = 0  # initialize as though there was a closure failure
             for i in range(n):
                 if (my_packedID == n_array[i]):
@@ -254,7 +254,7 @@ if __name__ == '__main__':
                 print("since the product of the %d-th power and %d-th power" %(j,k,))
                 m = (j+k) % n
                 print("which should have been the %d-th power which had value" %m )
-                myp.print_naive(n_array[m])
+                mypy.print_naive(n_array[m])
 
                 print("The computed result has packedID %g instead of %g"
                    %(my_packedID, n_array[m]))
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     # if (verbose>1):
     #     print("The length of the array is %d" %len(n5_array))
     # for k in range(n):
-    #     n5_array[k]  = myp.k_th_power_of_n_th_root_of_unity_pID(k,n,call_verbose)
+    #     n5_array[k]  = mypy.k_th_power_of_n_th_root_of_unity_pID(k,n,call_verbose)
     # print("\nHere is the array of matrixIDs of the %dth roots of unity:" %n)
     # print(n5_array)
     # if (verbose>1):
@@ -292,38 +292,38 @@ if __name__ == '__main__':
     #     for k in range(n):
     #        print("The matrixID is %d" %n5_array[k])
     #        print("The %d-th power of the %d-th root of unity is" %(k,n))
-    #        myp.print_naive(n5_array[k])
+    #        mypy.print_naive(n5_array[k])
     #        print("")
     # print("\nNow we can look to see if multiplication is closed, by looking")
     # print("at the matrixIDs of products of pairs of these roots.")
     # for k in range(n):
     #     for j in range(k+1):
-    #         my_matrixID = myp.matrix_mult(n5_array[j],n5_array[k])
+    #         my_matrixID = mypy.matrix_mult(n5_array[j],n5_array[k])
     #         print("The (%d,%d)th product has matrix ID" %(j,k))
     #         print(my_matrixID)
     # print("\n")
 
     # print("\nTODO: Fix these non desirable:")
     # print("\nFor n = 5 we see that the product of the 1st and 4th roots,")
-    # my_matrixID = myp.matrix_mult(n5_array[1],n5_array[4])
+    # my_matrixID = mypy.matrix_mult(n5_array[1],n5_array[4])
     # print("the (%d,%d)th product has matrix ID" %(1,4))
     # print(my_matrixID)
     # print("which has stored value")
-    # myp.print_naive(my_matrixID)
+    # mypy.print_naive(my_matrixID)
     # print("")
     # print("Whereas if the locality hash was perfect we expected to see")
     # print(n5_array[0])
     # print("which has stored value")
-    # myp.print_naive(n5_array[0])
+    # mypy.print_naive(n5_array[0])
 
 
-    # mID = myp.matrix_diff(int64_t A_mID, int64_t B_mID)
+    # mID = mypy.matrix_diff(int64_t A_mID, int64_t B_mID)
     # get numerical value mID
     # if val
     # i = 1
     # while value > 1/(2^i)for i in 
     #     see if the value is < 
-    #         my_matrixID = myp.matrix_mult(n5_array[j],n5_array[k])
+    #         my_matrixID = mypy.matrix_mult(n5_array[j],n5_array[k])
     #         print("The (%d,%d)th product has matrix ID" %(j,k))
     #         print(my_matrixID)
     # print("\n")

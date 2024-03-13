@@ -1,4 +1,4 @@
 The routine test_roots_unity.py can probably be moved to the tutorial
-it illustrates using LAC to mimic symbolic computation.
+it illustrates using LARC to mimic symbolic computation.
 In this example we pick region parameters so that the roots
 of unity are closed under multiplication.

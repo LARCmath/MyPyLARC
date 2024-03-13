@@ -1,7 +1,7 @@
 #*                   Makefile
 #*#################################################################
  #                                                                #
- # Copyright (C) 2014, Institute for Defense Analyses             #
+ # Copyright (C) 2014-2024, Institute for Defense Analyses        #
  # 4850 Mark Center Drive, Alexandria, VA; 703-845-2500           #
  # This material may be reproduced by or for the US Government    #
  # pursuant to the copyright license under the clauses at DFARS   #
@@ -90,7 +90,7 @@ OPTS = -O2 -g -Wall -fPIC -DGIT_COMMIT_DATE="\"$(GIT_COMMIT_DATE)\""
 CFLAGS = $(OPTS) -I$(SRCDIR) -I$(MPIDIR) -I$(GMPIDIR) -I$(LARCDIR) -std=gnu99
 
 #* Libraries
-LIBS = -L$(MPLDIR) -L$(GMPLDIR) -L$(LARCLIBDIR) -lncurses -lm -lmpc -lmpfr -lgmp -lpthread -llarc -ltinfo
+LIBS = -Wl,--copy-dt-needed-entries -L$(MPLDIR) -L$(GMPLDIR) -L$(LARCLIBDIR) -llarc -lncurses -lmpc -lmpfr -lgmp -lpthread -lm
 #* SWIG NOTE 1:
 # SWIG generates a python package from the C code called swiglarc
 # OURLIBS specifies use of the non-shared library liblarc.a, rather than
